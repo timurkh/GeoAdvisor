@@ -1,29 +1,31 @@
 package com.tinyadvisor.geoadvisor;
 
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.provider.SyncStateContract;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.content.Intent;
-import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationServices;
 
 
-public class MapTabActivity extends ActionBarActivity implements LocationListener{
-    GoogleMap googleMap;
+public class MapTabActivity extends ActionBarActivity implements
+        ConnectionCallbacks, OnConnectionFailedListener {
+
+    GoogleMap mGoogleMap;
+    protected GoogleApiClient mGoogleApiClient;
+    protected Location mLastLocation;
+
+    protected static final String TAG = "geoadvisor-map";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,40 +37,14 @@ public class MapTabActivity extends ActionBarActivity implements LocationListene
 
         setContentView(R.layout.activity_map_tab);
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        googleMap = mapFragment.getMap();
-        googleMap.setMyLocationEnabled(true);
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        String bestProvider = locationManager.getBestProvider(criteria, true);
-        Location location = locationManager.getLastKnownLocation(bestProvider);
-        if (location != null) {
-            onLocationChanged(location);
-        }
-        locationManager.requestLocationUpdates(bestProvider, 5000, 0, this);
-    }
+        mGoogleMap = mapFragment.getMap();
+        mGoogleMap.setMyLocationEnabled(true);
 
-    @Override
-    public void onLocationChanged(Location location) {
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-        LatLng latLng = new LatLng(latitude, longitude);
-        googleMap.addMarker(new MarkerOptions().position(latLng));
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
     }
 
     private boolean isGooglePlayServicesAvailable() {
@@ -79,6 +55,46 @@ public class MapTabActivity extends ActionBarActivity implements LocationListene
             GooglePlayServicesUtil.getErrorDialog(status, this, 0).show();
             return false;
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        // Provides a simple way of getting a device's location and is well suited for
+        // applications that do not require a fine-grained location and that do not need location
+        // updates. Gets the best and most recent location currently available, which may be null
+        // in rare cases when a location is not available.
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mLastLocation != null) {
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        // Refer to the javadoc for ConnectionResult to see what error codes might be returned in
+        // onConnectionFailed.
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        // The connection to Google Play services was lost for some reason. We call connect() to
+        // attempt to re-establish the connection.
+        Log.i(TAG, "Connection suspended");
+        mGoogleApiClient.connect();
     }
 
     @Override
