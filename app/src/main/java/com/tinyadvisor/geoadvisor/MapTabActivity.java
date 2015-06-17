@@ -1,6 +1,7 @@
 package com.tinyadvisor.geoadvisor;
 
 import android.location.Location;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +19,7 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.location.LocationServices;
 
 
-public class MapTabActivity extends ActionBarActivity implements
+public class MapTabActivity extends FragmentActivity implements
         ConnectionCallbacks, OnConnectionFailedListener {
 
     GoogleMap mGoogleMap;
