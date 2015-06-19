@@ -1,9 +1,12 @@
 package com.tinyadvisor.geoadvisor;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ContextWrapper;
+import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +33,7 @@ public class GeoTrackerService extends Service  implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
+    protected final static String TAG = "GEOTRACKERSERVICE";
 
     private AddressResultReceiver mAddressResultReceiver;
 
@@ -54,7 +58,7 @@ public class GeoTrackerService extends Service  implements
      */
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-
+    public static final int ONGOING_NOTIFICATION_ID = 1;
 
 
 
@@ -66,9 +70,10 @@ public class GeoTrackerService extends Service  implements
         super.onCreate();
 
         if (!isGooglePlayServicesAvailable()) {
-            Log.e(Constants.TAG, "Google Play Services are not available");
+            Log.e(TAG, "Google Play Services are not available");
             stopSelf();
         }
+
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -87,6 +92,7 @@ public class GeoTrackerService extends Service  implements
 
     @Override
     public void onDestroy() {
+        removeNotification();
         stopLocationUpdates();
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
@@ -95,8 +101,16 @@ public class GeoTrackerService extends Service  implements
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mGeoServiceResult = intent.getParcelableExtra("receiver");
-        
+        if(intent != null) {
+            mGeoServiceResult = intent.getParcelableExtra(Constants.RECEIVER);
+        }
+        else {
+            mGeoServiceResult = null;
+            Log.w(TAG, "onStartCommand: null intent is passed, perhaps activity is dead");
+        }
+
+        createServiceStateNotification();
+
         return START_STICKY;
     }
 
@@ -106,24 +120,60 @@ public class GeoTrackerService extends Service  implements
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    void sendUpdatedGeoState() {
+    private void createServiceStateNotification() {
+
+        Intent notificationIntent = new Intent(this, MapTabActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.location)
+//                .setLargeIcon(BitmapFactory.decodeResource(getResources(), ))
+                .setContentTitle("GeoADvisor: notification")
+                .setContentText("GeoADvisor: text")
+                .setContentIntent(contentIntent);
+
+        Notification notification = builder.build();
+        notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    private void removeNotification() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.cancel(ONGOING_NOTIFICATION_ID);
+    }
+
+    void sendUpdatedGeoState () {
+        sendUpdatedGeoState(false);
+    }
+
+    void sendUpdatedGeoState(Boolean includeAddress) {
         if(mGeoServiceResult != null) {
             Bundle bundle = new Bundle();
-            mGeoState.saveInstanceState(bundle);
+            mGeoState.saveInstanceState(bundle, includeAddress);
             mGeoServiceResult.send(Constants.GEO_STATE, bundle);
         }
     }
 
     void sendLocationSettingsStatus(Status status) {
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("STATUS", status);
-        mGeoServiceResult.send(Constants.LOCATION_SETTINGS_STATUS, bundle);
+        if(mGeoServiceResult != null) {
+            Log.i(TAG, "Notifying activity that location settings are not sufficient");
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("STATUS", status);
+            mGeoServiceResult.send(Constants.LOCATION_SETTINGS_STATUS, bundle);
+        }
     }
 
     void sendGooglePlayServiceUnavailable(int status) {
-        Bundle bundle = new Bundle();
-        bundle.putInt("STATUS", status);
-        mGeoServiceResult.send(Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE, bundle);
+        if(mGeoServiceResult != null) {
+            Log.i(TAG, "Notifying activity that Google Play Services is unavailable");
+            Bundle bundle = new Bundle();
+            bundle.putInt("STATUS", status);
+            mGeoServiceResult.send(Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE, bundle);
+        }
     }
 
     /**
@@ -191,17 +241,17 @@ public class GeoTrackerService extends Service  implements
                 final Status status = locationSettingsResult.getStatus();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        Log.i(Constants.TAG, "All location settings are satisfied.");
+                        Log.i(TAG, "All location settings are satisfied.");
                         startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        Log.i(Constants.TAG, "Location settings are not satisfied. Show the user a dialog to" +
+                        Log.w(TAG, "Location settings are not satisfied. Show the user a dialog to" +
                                 "upgrade location settings ");
 
                         sendLocationSettingsStatus(status);
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        Log.i(Constants.TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
+                        Log.e(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
                                 "not created.");
                         break;
                 }
@@ -258,14 +308,14 @@ public class GeoTrackerService extends Service  implements
     public void onConnectionFailed(ConnectionResult result) {
         // Refer to the javadoc for ConnectionResult to see what error codes might be returned in
         // onConnectionFailed.
-        Log.i(Constants.TAG, "Connection to GoogleAPI failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+        Log.e(TAG, "Connection to GoogleAPI failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
     }
 
     @Override
     public void onConnectionSuspended(int cause) {
         // The connection to Google Play services was lost for some reason. We call connect() to
         // attempt to re-establish the connection.
-        Log.i(Constants.TAG, "Connection to GoogleAPI suspended");
+        Log.w(TAG, "Connection to GoogleAPI suspended");
         mGoogleApiClient.connect();
     }
 
@@ -309,7 +359,7 @@ public class GeoTrackerService extends Service  implements
             // Display the address string or an error message sent from the intent service.
             mGeoState.setAddress(resultData.getString(Constants.RESULT_DATA_KEY));
             mAddressRequested = false;
-            sendUpdatedGeoState();
+            sendUpdatedGeoState(true);
         }
     }
 }

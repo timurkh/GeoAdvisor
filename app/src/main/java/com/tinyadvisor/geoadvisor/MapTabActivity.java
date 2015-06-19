@@ -39,6 +39,7 @@ import java.util.Date;
 
 public class MapTabActivity extends Activity {
 
+    protected  static final String TAG = "MAPACTIVITY";
     protected GoogleMap mGoogleMap;
     protected TextView mAddressTextView;
     protected TextView mActivityTextView;
@@ -69,7 +70,7 @@ public class MapTabActivity extends Activity {
 
         mGeoServiceResults = new GeoServiceResultReceiver(this, null);
         Intent intent = new Intent(this, GeoTrackerService.class);
-        intent.putExtra("receiver", mGeoServiceResults);
+        intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
         startService(intent);
 
         updateMapUI();
@@ -78,9 +79,15 @@ public class MapTabActivity extends Activity {
     /**
      * Stores activity data in the Bundle.
      */
+    @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        mGeoState.saveInstanceState(savedInstanceState);
+        mGeoState.saveInstanceState(savedInstanceState, true);
         super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private LatLng mPreviousLatLng;
@@ -166,7 +173,7 @@ public class MapTabActivity extends Activity {
                         // in onActivityResult().
                         status.startResolutionForResult(mActivity, REQUEST_CHECK_SETTINGS);
                     } catch (IntentSender.SendIntentException e) {
-                        Log.i(Constants.TAG, "PendingIntent unable to execute request.");
+                        Log.e(TAG, "PendingIntent unable to execute request.");
                     }
                     break;
             }
