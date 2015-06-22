@@ -2,6 +2,7 @@ package com.tinyadvisor.geoadvisor;
 
 import android.location.Location;
 import android.os.Bundle;
+import android.provider.SyncStateContract;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -19,7 +20,6 @@ public class GeoState {
     protected Location mCurrentLocation;
     protected String mLastUpdateTime;
     protected String mCurrentAddress;
-    protected String mLastSentAddress;
 
     // Keys for storing activity state in the Bundle.
     protected final static String LOCATION_KEY = "location-key";
@@ -28,9 +28,17 @@ public class GeoState {
     protected static final String ADDRESS_REQUESTED_LOCATION_KEY = "address-request-location-pending";
     protected static final String LOCATION_ADDRESS_KEY = "location-address";
 
-    void setLocation(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+    /**
+     *
+     * @return true if location has changed and false otherwise
+     */
+    boolean setLocation(Location location) {
+        if(location != null && (mCurrentLocation == null || mCurrentLocation.distanceTo(location) > Constants.DISTANCE_TO_UPDATE_LOCATION)) {
+            mCurrentLocation = location;
+            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+            return true;
+        }
+        return  false;
     }
 
     void setAddress(String address) {
@@ -101,7 +109,6 @@ public class GeoState {
         }
 
         if(mCurrentAddress != null && includeAddress) {
-            mLastSentAddress = mCurrentAddress;
             savedInstanceState.putString(LOCATION_ADDRESS_KEY, mCurrentAddress);
             log.append(" mAddressOutput=" + mCurrentAddress.toString());
         }

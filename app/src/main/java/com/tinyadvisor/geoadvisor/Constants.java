@@ -19,6 +19,7 @@ public final class Constants {
 
     public static final double DISTANCE_TO_MOVE_CAMERA = 100;
     public static final double DISTANCE_TO_UPDATE_MAP = 100;
+    public static final double DISTANCE_TO_UPDATE_LOCATION = 10;
 
     public static final int GEO_STATE = 0;
     public static final int LOCATION_SETTINGS_STATUS = 1;

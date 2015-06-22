@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -46,12 +45,12 @@ public class GeoTrackerService extends Service  implements
     protected GoogleApiClient mGoogleApiClient;
 
     GeoState mGeoState;
-    ResultReceiver mGeoServiceResult;
+    ResultReceiver mGeoServiceResults;
 
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
@@ -102,10 +101,10 @@ public class GeoTrackerService extends Service  implements
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
-            mGeoServiceResult = intent.getParcelableExtra(Constants.RECEIVER);
+            mGeoServiceResults = intent.getParcelableExtra(Constants.RECEIVER);
         }
         else {
-            mGeoServiceResult = null;
+            mGeoServiceResults = null;
             Log.w(TAG, "onStartCommand: null intent is passed, perhaps activity is dead");
         }
 
@@ -151,28 +150,28 @@ public class GeoTrackerService extends Service  implements
     }
 
     void sendUpdatedGeoState(Boolean includeAddress) {
-        if(mGeoServiceResult != null) {
+        if(mGeoServiceResults != null) {
             Bundle bundle = new Bundle();
             mGeoState.saveInstanceState(bundle, includeAddress);
-            mGeoServiceResult.send(Constants.GEO_STATE, bundle);
+            mGeoServiceResults.send(Constants.GEO_STATE, bundle);
         }
     }
 
     void sendLocationSettingsStatus(Status status) {
-        if(mGeoServiceResult != null) {
+        if(mGeoServiceResults != null) {
             Log.i(TAG, "Notifying activity that location settings are not sufficient");
             Bundle bundle = new Bundle();
             bundle.putParcelable("STATUS", status);
-            mGeoServiceResult.send(Constants.LOCATION_SETTINGS_STATUS, bundle);
+            mGeoServiceResults.send(Constants.LOCATION_SETTINGS_STATUS, bundle);
         }
     }
 
     void sendGooglePlayServiceUnavailable(int status) {
-        if(mGeoServiceResult != null) {
+        if(mGeoServiceResults != null) {
             Log.i(TAG, "Notifying activity that Google Play Services is unavailable");
             Bundle bundle = new Bundle();
             bundle.putInt("STATUS", status);
-            mGeoServiceResult.send(Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE, bundle);
+            mGeoServiceResults.send(Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE, bundle);
         }
     }
 
@@ -284,9 +283,10 @@ public class GeoTrackerService extends Service  implements
         // is displayed as the activity is re-created.
 
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-
-        if(mGeoState.getLocation() != null)
+        if(location != null) {
+            mGeoState.setLocation(location);
             sendUpdatedGeoState();
+        }
 
         startLocationUpdates();
     }
@@ -296,8 +296,8 @@ public class GeoTrackerService extends Service  implements
      */
     @Override
     public void onLocationChanged(Location location) {
-        mGeoState.setLocation(location);
-        sendUpdatedGeoState();
+        if(mGeoState.setLocation(location))
+            sendUpdatedGeoState();
 
         if(!mAddressRequested)
             if (mAddressRequestedLocation == null || (mAddressRequestedLocation.distanceTo(mGeoState.getLocation()) > Constants.DISTANCE_TO_UPDATE_MAP))
