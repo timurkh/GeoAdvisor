@@ -6,11 +6,13 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -180,22 +182,26 @@ public class GeoTrackerService extends Service  implements
      * fetching an address.
      */
     protected void startIntentService() {
-        mAddressRequested = true;
-        mAddressRequestedLocation = mGeoState.getLocation();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if(prefs.getBoolean("enable_background_service_checkbox", true)) {
 
-        // Create an intent for passing to the intent service responsible for fetching the address.
-        Intent intent = new Intent(this, FetchAddressIntentService.class);
+            mAddressRequested = true;
+            mAddressRequestedLocation = mGeoState.getLocation();
 
-        // Pass the result receiver as an extra to the service.
-        intent.putExtra(Constants.RECEIVER, mAddressResultReceiver);
+            // Create an intent for passing to the intent service responsible for fetching the address.
+            Intent intent = new Intent(this, FetchAddressIntentService.class);
 
-        // Pass the location data as an extra to the service.
-        intent.putExtra(Constants.LOCATION_DATA_EXTRA, mGeoState.getLocation());
+            // Pass the result receiver as an extra to the service.
+            intent.putExtra(Constants.RECEIVER, mAddressResultReceiver);
 
-        // Start the service. If the service isn't already running, it is instantiated and started
-        // (creating a process for it if needed); if it is running then it remains running. The
-        // service kills itself automatically once all intents are processed.
-        startService(intent);
+            // Pass the location data as an extra to the service.
+            intent.putExtra(Constants.LOCATION_DATA_EXTRA, mGeoState.getLocation());
+
+            // Start the service. If the service isn't already running, it is instantiated and started
+            // (creating a process for it if needed); if it is running then it remains running. The
+            // service kills itself automatically once all intents are processed.
+            startService(intent);
+        }
     }
 
 

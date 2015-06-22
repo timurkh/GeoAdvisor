@@ -1,11 +1,16 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <CheckBoxPreference
-        android:key="enable_background_service_checkbox"
+        android:key="@+id/enable_background_service_checkbox"
         android:title="@string/enable_background_service"
         android:summary="@string/enable_background_service_summary"
         android:defaultValue="true" />
 
+    <CheckBoxPreference
+        android:key="@+id/track_location_address_checkbox"
+        android:title="@string/track_location_address"
+        android:summary="@string/track_location_address_summary"
+        android:defaultValue="true" />
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <EditTextPreference

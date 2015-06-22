@@ -84,12 +84,15 @@ public class SettingsActivity extends PreferenceActivity
 
             if(preference.getKey().toString().equals("enable_background_service_checkbox")) {
                 if(boolValue) {
-                    Intent intent = new Intent(this, SettingsActivity.class);
+                    this.findViewById(R.id.track_location_address_checkbox).setEnabled(true);
+/*                    Intent intent = new Intent(this, SettingsActivity.class);
                     intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
                     this.startService(new Intent(this, GeoTrackerService.class));
-                }
-                else
+*/                }
+                else {
                     this.stopService(new Intent(this, GeoTrackerService.class));
+                    this.findViewById(R.id.track_location_address_checkbox).setEnabled(false);
+                }
             }
 
         } else {
@@ -126,6 +129,7 @@ public class SettingsActivity extends PreferenceActivity
             // updated to reflect the new value, per the Android Design
             // guidelines.
             setupPreferenceValueAndSummary(findPreference("enable_background_service_checkbox"));
+            setupPreferenceValueAndSummary(findPreference("track_location_address_checkbox"));
             setupPreferenceValueAndSummary(findPreference("example_text"));
             setupPreferenceValueAndSummary(findPreference("example_list"));
         }
