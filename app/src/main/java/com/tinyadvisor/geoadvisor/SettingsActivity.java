@@ -15,16 +15,12 @@ import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
 
-public class SettingsActivity extends PreferenceActivity
-        implements Preference.OnPreferenceChangeListener{
-
-    ResultReceiver mGeoServiceResults;
+public class SettingsActivity extends PreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        mGeoServiceResults = getIntent().getParcelableExtra(Constants.RECEIVER);
         getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
     }
 
@@ -63,62 +59,32 @@ public class SettingsActivity extends PreferenceActivity
         return GeneralPreferenceFragment.class.getName().equals(fragmentName);
     }
 
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object value) {
-
-        if (preference instanceof ListPreference) {
-            String stringValue = value.toString();
-
-            // For list preferences, look up the correct display value in
-            // the preference's 'entries' list.
-            ListPreference listPreference = (ListPreference) preference;
-            int index = listPreference.findIndexOfValue(stringValue);
-
-            // Set the summary to reflect the new value.
-            preference.setSummary(
-                    index >= 0
-                            ? listPreference.getEntries()[index]
-                            : null);
-        } else if (preference instanceof CheckBoxPreference) {
-            Boolean boolValue = (Boolean)value;
-
-            if(preference.getKey().toString().equals("enable_background_service_checkbox")) {
-                if(boolValue) {
-                    this.findViewById(R.id.track_location_address_checkbox).setEnabled(true);
-/*                    Intent intent = new Intent(this, SettingsActivity.class);
-                    intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
-                    this.startService(new Intent(this, GeoTrackerService.class));
-*/                }
-                else {
-                    this.stopService(new Intent(this, GeoTrackerService.class));
-                    this.findViewById(R.id.track_location_address_checkbox).setEnabled(false);
-                }
-            }
-
-        } else {
-            String stringValue = value.toString();
-
-            // For all other preferences, set the summary to the value's
-            // simple string representation.
-            preference.setSummary(stringValue);
+    protected void startBackgroundService(Boolean boolValue) {
+        if(boolValue) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            this.startService(new Intent(this, GeoTrackerService.class));
         }
-
-        return true;
+        else {
+            this.stopService(new Intent(this, GeoTrackerService.class));
+        }
     }
 
-    private void setupPreferenceValueAndSummary(Preference preference) {
-        // Set the listener to watch for value changes.
-        preference.setOnPreferenceChangeListener(this);
-
-        // Trigger the listener immediately with the preference's
-        // current value.
-        Object value = PreferenceManager
-                .getDefaultSharedPreferences(preference.getContext()).getAll().get(preference.getKey());
-        onPreferenceChange(preference, value);
-    }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public class GeneralPreferenceFragment extends PreferenceFragment {
+    public class GeneralPreferenceFragment extends PreferenceFragment
+            implements Preference.OnPreferenceChangeListener {
+
+        private void setupPreferenceValueAndSummary(Preference preference) {
+            // Set the listener to watch for value changes.
+            preference.setOnPreferenceChangeListener(this);
+
+            // Trigger the listener immediately with the preference's
+            // current value.
+            Object value = PreferenceManager
+                    .getDefaultSharedPreferences(preference.getContext()).getAll().get(preference.getKey());
+            onPreferenceChange(preference, value);
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -130,8 +96,49 @@ public class SettingsActivity extends PreferenceActivity
             // guidelines.
             setupPreferenceValueAndSummary(findPreference("enable_background_service_checkbox"));
             setupPreferenceValueAndSummary(findPreference("track_location_address_checkbox"));
-            setupPreferenceValueAndSummary(findPreference("example_text"));
-            setupPreferenceValueAndSummary(findPreference("example_list"));
+
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object value) {
+
+            if (preference instanceof ListPreference) {
+                String stringValue = value.toString();
+
+                // For list preferences, look up the correct display value in
+                // the preference's 'entries' list.
+                ListPreference listPreference = (ListPreference) preference;
+                int index = listPreference.findIndexOfValue(stringValue);
+
+                // Set the summary to reflect the new value.
+                preference.setSummary(
+                        index >= 0
+                                ? listPreference.getEntries()[index]
+                                : null);
+            } else if (preference instanceof CheckBoxPreference) {
+                Boolean boolValue = (Boolean)value;
+
+                if(preference.getKey().toString().equals("enable_background_service_checkbox")) {
+
+                    if(boolValue) {
+                        this.findPreference("track_location_address_checkbox").setEnabled(true);
+                    }
+                    else {
+                    }
+
+                    startBackgroundService(boolValue);
+
+                }
+
+            } else {
+                String stringValue = value.toString();
+
+                // For all other preferences, set the summary to the value's
+                // simple string representation.
+                preference.setSummary(stringValue);
+            }
+
+            return true;
         }
     }
 }

@@ -68,6 +68,7 @@ public class MapTabActivity extends Activity {
     protected void onResume() {
         super.onResume();
         startGeoTrackerService();
+        updateMapUI();
     }
 
     void startGeoTrackerService() {
@@ -122,10 +123,13 @@ public class MapTabActivity extends Activity {
             if (mGeoState.getAddress() != null)
                 mCurrentAddress = mGeoState.getAddress();
         }
+        else {
+            mCurrentAddress = null;
+        }
 
-        if(mCurrentAddress != null) {
+        if(mCurrentAddress != null && PreferenceManager.getDefaultSharedPreferences(this).getBoolean("track_location_address_checkbox", true)) {
             mAddressTitleTextView.setVisibility(View.VISIBLE);
-            mAddressTextView.setText(mGeoState.getAddress());
+            mAddressTextView.setText(mCurrentAddress);
         } else {
             mAddressTitleTextView.setVisibility(View.GONE);
             mAddressTextView.setText("");
