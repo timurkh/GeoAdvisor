@@ -26,14 +26,19 @@ public class MapTabActivity extends Activity {
 
     protected  static final String TAG = "MAPACTIVITY";
     protected GoogleMap mGoogleMap;
+
+    protected LocationResult mLocationResult = new LocationResult();
+    private LatLng mCurrentLatLng;
+    protected TextView mLocationTextView;
+    protected TextView mLocationTitleTextView;
+
+    protected AddressResult mAddressResult = new AddressResult();;
+    private String mCurrentAddress;
     protected TextView mAddressTextView;
     protected TextView mAddressTitleTextView;
+
     protected TextView mActivityTextView;
     protected TextView mActivityTitleTextView;
-    protected GeoState mGeoState;
-    private LatLng mCurrentLatLng;
-    private String mCurrentAddress;
-
 
     /**
      * Constant used in the location settings dialog.
@@ -47,6 +52,8 @@ public class MapTabActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_map_tab);
+        mLocationTextView = (TextView)findViewById(R.id.location);
+        mLocationTitleTextView = (TextView)findViewById(R.id.location_title);
         mAddressTextView = (TextView)findViewById(R.id.detected_address);
         mAddressTitleTextView = (TextView)findViewById(R.id.detected_address_title);
         mActivityTextView = (TextView)findViewById(R.id.detected_activity_name);
@@ -57,8 +64,8 @@ public class MapTabActivity extends Activity {
         mGoogleMap.setMyLocationEnabled(true);
         mGoogleMap.setIndoorEnabled(true);
 
-        mGeoState = new GeoState();
-        mGeoState.updateValuesFromBundle(savedInstanceState);
+        mLocationResult.updateValuesFromBundle(savedInstanceState);
+        mAddressResult.updateValuesFromBundle(savedInstanceState);
 
         startGeoTrackerService();
         updateMapUI();
@@ -73,13 +80,11 @@ public class MapTabActivity extends Activity {
 
     void startGeoTrackerService() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(prefs.getBoolean("enable_background_service_checkbox", true)) {
-            if(mGeoServiceResults == null) {
-                mGeoServiceResults = new GeoServiceResultReceiver(this, null);
-                Intent intent = new Intent(this, GeoTrackerService.class);
-                intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
-                startService(intent);
-            }
+        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
+            mGeoServiceResults = new GeoServiceResultReceiver(this, null);
+            Intent intent = new Intent(this, GeoTrackerService.class);
+            intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
+            startService(intent);
         } else {
             mGeoServiceResults = null;
         }
@@ -90,7 +95,8 @@ public class MapTabActivity extends Activity {
      */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        mGeoState.saveInstanceState(savedInstanceState, true);
+        mLocationResult.saveInstanceState(savedInstanceState);
+        mAddressResult.saveInstanceState(savedInstanceState);
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -100,9 +106,12 @@ public class MapTabActivity extends Activity {
     }
 
     protected void updateMapUI() {
-        LatLng newLatLng = mGeoState.getLatLng();
+        LatLng newLatLng = mLocationResult.getLatLng();
 
-        if(newLatLng != null) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if(newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
+            mGoogleMap.setMyLocationEnabled(true);
             boolean cameraTracksCurrentLocation = true;
             LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
             if (mCurrentLatLng != null) {
@@ -120,19 +129,27 @@ public class MapTabActivity extends Activity {
 
             mCurrentLatLng = newLatLng;
 
-            if (mGeoState.getAddress() != null)
-                mCurrentAddress = mGeoState.getAddress();
+            if (mAddressResult.getDefined())
+                mCurrentAddress = mAddressResult.getAddress();
+
+            mLocationTitleTextView.setVisibility(View.VISIBLE);
+            mLocationTextView.setVisibility(View.VISIBLE);
+            mLocationTextView.setText(mCurrentLatLng.toString());
         }
         else {
+            mGoogleMap.setMyLocationEnabled(false);
+            mLocationTitleTextView.setVisibility(View.GONE);
+            mLocationTextView.setVisibility(View.GONE);
             mCurrentAddress = null;
         }
 
-        if(mCurrentAddress != null && PreferenceManager.getDefaultSharedPreferences(this).getBoolean("track_location_address_checkbox", true)) {
+        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_LOCATION_ADDRESS, true)) {
             mAddressTitleTextView.setVisibility(View.VISIBLE);
+            mAddressTextView.setVisibility(View.VISIBLE);
             mAddressTextView.setText(mCurrentAddress);
         } else {
             mAddressTitleTextView.setVisibility(View.GONE);
-            mAddressTextView.setText("");
+            mAddressTextView.setVisibility(View.GONE);
         }
     }
 
@@ -159,9 +176,10 @@ public class MapTabActivity extends Activity {
         //noinspection SimplifiableIfStatement
         switch(id) {
             case R.id.action_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
-                startActivity(intent);
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.action_logs:
+                startActivity(new Intent(this, LogsActivity.class));
                 return true;
         }
 
@@ -179,14 +197,17 @@ public class MapTabActivity extends Activity {
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             switch (resultCode) {
-                case Constants.GEO_STATE:
-                    mGeoState.updateValuesFromBundle(resultData);
+                case Constants.LOCATION_RESULT:
+                    mLocationResult.updateValuesFromBundle(resultData);
+                    updateMapUI();
+                    break;
+                case Constants.ADDRESS_RESULT:
+                    mAddressResult.updateValuesFromBundle(resultData);
                     updateMapUI();
                     break;
                 case Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE:
                     GooglePlayServicesUtil.getErrorDialog(resultData.getInt("STATUS"), mActivity, 0).show();
                     break;
-
                 case Constants.LOCATION_SETTINGS_STATUS:
                     try {
                         Status status = resultData.getParcelable("STATUS");

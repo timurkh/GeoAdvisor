@@ -11,6 +11,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.provider.SyncStateContract;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
@@ -94,8 +95,8 @@ public class SettingsActivity extends PreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            setupPreferenceValueAndSummary(findPreference("enable_background_service_checkbox"));
-            setupPreferenceValueAndSummary(findPreference("track_location_address_checkbox"));
+            setupPreferenceValueAndSummary(findPreference(Constants.ENABLE_BACKGROUND_SERVICE));
+            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_LOCATION_ADDRESS));
 
         }
 
@@ -118,13 +119,9 @@ public class SettingsActivity extends PreferenceActivity {
             } else if (preference instanceof CheckBoxPreference) {
                 Boolean boolValue = (Boolean)value;
 
-                if(preference.getKey().toString().equals("enable_background_service_checkbox")) {
+                if(preference.getKey().toString().equals(Constants.ENABLE_BACKGROUND_SERVICE)) {
 
-                    if(boolValue) {
-                        this.findPreference("track_location_address_checkbox").setEnabled(true);
-                    }
-                    else {
-                    }
+                    this.findPreference(Constants.TRACK_LOCATION_ADDRESS).setEnabled(boolValue);
 
                     startBackgroundService(boolValue);
 
