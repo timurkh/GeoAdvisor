@@ -1,4 +1,4 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -17,13 +18,13 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
+import com.tinyadvisor.geoadvisor.Constants;
+import com.tinyadvisor.geoadvisor.MapTabActivity;
+import com.tinyadvisor.geoadvisor.R;
 
 
 import java.util.ArrayList;
@@ -68,8 +69,7 @@ public class GeoTrackerService extends Service implements
         mAddresssTrackerHelper = new AddressTrackerHelper() {
             @Override
             public void sendResult(int resultCode, Bundle resultData) {
-                if(mGeoServiceResults != null)
-                    mGeoServiceResults.send(resultCode, resultData);
+                GeoTrackerService.this.sendResult(resultCode, resultData);
             }
 
             @Override
@@ -81,8 +81,7 @@ public class GeoTrackerService extends Service implements
         mLocationTrackerHelper = new LocationTrackerHelper() {
             @Override
             public void sendResult(int resultCode, Bundle resultData) {
-                if(mGeoServiceResults != null)
-                    mGeoServiceResults.send(resultCode, resultData);
+                GeoTrackerService.this.sendResult(resultCode, resultData);
             }
 
             @Override
@@ -118,8 +117,6 @@ public class GeoTrackerService extends Service implements
             Log.w(TAG, "onStartCommand: null intent is passed, perhaps activity is dead");
         }
 
-        createServiceStateNotification();
-
         return START_STICKY;
     }
 
@@ -129,17 +126,41 @@ public class GeoTrackerService extends Service implements
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    private void createServiceStateNotification() {
+    private void setNotificationMessage() {
 
         Intent notificationIntent = new Intent(this, MapTabActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
+        StringBuilder notificationTitle = new StringBuilder();
+        StringBuilder notificationText = new StringBuilder();
+
+        Address address = mAddresssTrackerHelper.getAddressResult().getAddress();
+        notificationTitle.append(getResources().getString(R.string.app_name));
+
+        if(address != null) {
+
+            notificationTitle.append(": ");
+
+            notificationTitle.append("@");
+            notificationTitle.append(address.getLocality());
+
+            if(mLocationTrackerHelper.getLocationResult().getLocation() != null) {
+                notificationText.append(mLocationTrackerHelper.getLocationResult().getState());
+                notificationText.append(System.lineSeparator());
+            }
+
+            notificationText.append(mAddresssTrackerHelper.getAddressResult().getState());
+
+        } else {
+            notificationText.append(getResources().getString(R.string.obtaining_address));
+        }
+
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.location)
-//                .setLargeIcon(BitmapFactory.decodeResource(getResources(), ))
-                .setContentTitle("GeoADvisor: notification")
-                .setContentText("GeoADvisor: text")
+                .setContentTitle(notificationTitle.toString())
+                .setStyle(new Notification.BigTextStyle().bigText(notificationText.toString()))
+                .setContentText(notificationText.toString())
                 .setContentIntent(contentIntent);
 
         Notification notification = builder.build();
@@ -158,6 +179,7 @@ public class GeoTrackerService extends Service implements
     public void sendResult(int resultCode, Bundle resultData) {
         if(mGeoServiceResults != null)
             mGeoServiceResults.send(resultCode, resultData);
+        setNotificationMessage();
     }
 
     void sendGooglePlayServiceUnavailable(int status) {

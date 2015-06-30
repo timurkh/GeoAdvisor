@@ -1,4 +1,4 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.location.Location;
 import android.os.Bundle;
@@ -6,6 +6,7 @@ import android.provider.SyncStateContract;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.tinyadvisor.geoadvisor.Constants;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -46,6 +47,10 @@ public class LocationResult {
         return mCurrentLocation;
     }
 
+    public String getLastUpdateTime() {
+        return mLastUpdateTime;
+    }
+
     public LatLng getLatLng() {
         if(mCurrentLocation != null)
             return new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
@@ -76,7 +81,7 @@ public class LocationResult {
         }
     }
 
-    void saveInstanceState(Bundle savedInstanceState){
+    public void saveInstanceState(Bundle savedInstanceState){
 
         StringBuilder log = new StringBuilder("Saved instance state ");
 
@@ -92,4 +97,28 @@ public class LocationResult {
 
         Log.i(TAG, log.toString());
     }
+
+    public String getShortState() {
+        if(getLatLng() != null) {
+            return getLatLng().toString();
+        }
+
+        return null;
+    }
+
+    public String getState() {
+        if (getLocation() != null) {
+            StringBuilder state = new StringBuilder();
+            state.append("[");
+            state.append(getLastUpdateTime());
+            state.append("] ");
+            state.append(getLatLng().toString());
+            state.append(" accuracy ");
+            state.append(getLocation().getAccuracy());
+            state.append("m");
+            return state.toString();
+        }
+        return null;
+    }
+
 }

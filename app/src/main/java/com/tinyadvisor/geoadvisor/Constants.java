@@ -13,7 +13,6 @@ public final class Constants {
 
     public static final String RECEIVER = PACKAGE_NAME + ".RECEIVER";
     public static final String ACTIVITY = PACKAGE_NAME + ".ACTIVITY";
-    public static final String RESULT_DATA_KEY = PACKAGE_NAME + ".RESULT_DATA_KEY";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME + ".LOCATION_DATA_EXTRA";
     public static final String ACTIVITY_EXTRA = PACKAGE_NAME + ".ACTIVITY_EXTRA";
     public static final String DETECTED_ACTIVITIES = PACKAGE_NAME + ".DETECTED_ACTIVITIES";

@@ -40,7 +40,7 @@ android:exported attribute to "false" stops other apps from starting this
 service, even when using an explicit intent.
         -->
         <service
-            android:name=".FetchAddressIntentService"
+            android:name=".com.tinyadvisor.geoadvisor.geotrackerservice.FetchAddressService"
             android:exported="false" />
 
         <meta-data
@@ -48,7 +48,7 @@ service, even when using an explicit intent.
             android:value="AIzaSyBbOdzwUp1Xy3_Bl3sD58huUkC1h-CibQg" />
 
         <service
-            android:name=".GeoTrackerService"
+            android:name=".com.tinyadvisor.geoadvisor.geotrackerservice.GeoTrackerService"
             android:enabled="true"
             android:exported="true" >
         </service>

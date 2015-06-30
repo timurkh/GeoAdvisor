@@ -10,25 +10,12 @@
         android:layout_height="wrap_content"
         android:minHeight="?android:attr/actionBarSize" />
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:map="http://schemas.android.com/apk/res-auto"
-        android:name="com.google.android.gms.maps.MapFragment"
-        android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:layout="@layout/activity_map_tab" />
-
     <RelativeLayout
         android:id="@+id/bottomlayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:padding="32dp" >
-
-        <ListView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/infolistview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/location_title"
@@ -76,5 +63,15 @@
 
 
     </RelativeLayout>
-
+    
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_above="@id/bottomlayout"
+        tools:layout="@layout/activity_map_tab"
+        />
    </RelativeLayout>

@@ -21,6 +21,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.AddressResult;
+import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.GeoTrackerService;
+import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.LocationResult;
 
 public class MapTabActivity extends Activity {
 
@@ -32,8 +35,8 @@ public class MapTabActivity extends Activity {
     protected TextView mLocationTextView;
     protected TextView mLocationTitleTextView;
 
-    protected AddressResult mAddressResult = new AddressResult();;
-    private String mCurrentAddress;
+    protected AddressResult mAddressResult = new AddressResult();
+    protected String mCurrentAddress;
     protected TextView mAddressTextView;
     protected TextView mAddressTitleTextView;
 
@@ -109,6 +112,7 @@ public class MapTabActivity extends Activity {
         LatLng newLatLng = mLocationResult.getLatLng();
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String currentAddress;
 
         if(newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
             mGoogleMap.setMyLocationEnabled(true);
@@ -130,7 +134,7 @@ public class MapTabActivity extends Activity {
             mCurrentLatLng = newLatLng;
 
             if (mAddressResult.getDefined())
-                mCurrentAddress = mAddressResult.getAddress();
+                mCurrentAddress = mAddressResult.getAddressAsText();
 
             mLocationTitleTextView.setVisibility(View.VISIBLE);
             mLocationTextView.setVisibility(View.VISIBLE);

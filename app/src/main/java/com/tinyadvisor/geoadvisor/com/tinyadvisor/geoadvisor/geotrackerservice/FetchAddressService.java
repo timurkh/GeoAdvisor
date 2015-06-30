@@ -1,4 +1,4 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -10,6 +10,9 @@ import android.os.ResultReceiver;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.tinyadvisor.geoadvisor.Constants;
+import com.tinyadvisor.geoadvisor.R;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +21,11 @@ import java.util.Locale;
 /**
  * Created by tkhakimyanov on 14.06.2015.
  */
-public class FetchAddressIntentService extends IntentService {
-    private static final String TAG = "geo-advisor-fetch-address";
+public class FetchAddressService extends IntentService {
+    private static final String TAG = "FETCH_ADDRESS_SERVICE";
+
+    public static final String RESULT_DATA_KEY = Constants.PACKAGE_NAME + ".RESULT_DATA_KEY";
+    public static final String ERROR_MESSAGE_KEY = Constants.PACKAGE_NAME + ".RESULT_ERROR_MESSAGE";
 
     /**
      * The receiver where results are forwarded from this service.
@@ -29,9 +35,8 @@ public class FetchAddressIntentService extends IntentService {
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
-     * @param name Used to name the worker thread, important only for debugging.
      */
-    public FetchAddressIntentService() {
+    public FetchAddressService() {
         super(TAG);
     }
 
@@ -104,32 +109,23 @@ public class FetchAddressIntentService extends IntentService {
             deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
         } else {
             Address address = addresses.get(0);
-            ArrayList<String> addressFragments = new ArrayList<String>();
-
-            // Fetch the address lines using {@code getAddressLine},
-            // join them, and send them to the thread. The {@link android.location.address}
-            // class provides other options for fetching address details that you may prefer
-            // to use. Here are some examples:
-            // getLocality() ("Mountain View", for example)
-            // getAdminArea() ("CA", for example)
-            // getPostalCode() ("94043", for example)
-            // getCountryCode() ("US", for example)
-            // getCountryName() ("United States", for example)
-            for(int i = 0; i < address.getMaxAddressLineIndex(); i++) {
-                addressFragments.add(address.getAddressLine(i));
-            }
             Log.i(TAG, "Address found");
-            deliverResultToReceiver(Constants.SUCCESS_RESULT,
-                    TextUtils.join(System.getProperty("line.separator"), addressFragments));
+            deliverResultToReceiver(Constants.SUCCESS_RESULT, address);
         }
     }
 
     /**
      * Sends a resultCode and message to the receiver.
      */
-    private void deliverResultToReceiver(int resultCode, String message) {
+    private void deliverResultToReceiver(int resultCode, Address address) {
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.RESULT_DATA_KEY, message);
+        bundle.putParcelable(RESULT_DATA_KEY, address);
+        mReceiver.send(resultCode, bundle);
+    }
+
+    private void deliverResultToReceiver(int resultCode, String error) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ERROR_MESSAGE_KEY, error);
         mReceiver.send(resultCode, bundle);
     }
 }

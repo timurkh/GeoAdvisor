@@ -1,4 +1,4 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.os.Bundle;
 

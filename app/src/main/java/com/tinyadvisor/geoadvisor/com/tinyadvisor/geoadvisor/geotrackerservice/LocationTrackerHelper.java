@@ -1,4 +1,4 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.location.Location;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.tinyadvisor.geoadvisor.Constants;
 
 
 /**
@@ -136,5 +137,9 @@ abstract class LocationTrackerHelper implements
         // The final argument to {@code requestLocationUpdates()} is a LocationListener
         // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
         LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), getLocationListener());
+    }
+
+    public LocationResult getLocationResult() {
+        return mLocationResult;
     }
 }

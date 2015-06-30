@@ -1,12 +1,15 @@
-package com.tinyadvisor.geoadvisor;
+package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
+
+import com.tinyadvisor.geoadvisor.Constants;
 
 /**
  * Created by tkhakimyanov on 27.06.2015.
@@ -38,7 +41,7 @@ abstract class AddressTrackerHelper
             mAddressRequestedLocation = location;
 
             // Create an intent for passing to the intent service responsible for fetching the address.
-            Intent intent = new Intent(getPackageContext(), FetchAddressIntentService.class);
+            Intent intent = new Intent(getPackageContext(), FetchAddressService.class);
 
             // Pass the result receiver as an extra to the service.
             intent.putExtra(Constants.RECEIVER, mAddressResultReceiver);
@@ -58,8 +61,13 @@ abstract class AddressTrackerHelper
             if (mAddressResult.getAddress() == null || mAddressRequestedLocation == null || (mAddressRequestedLocation.distanceTo(location) > Constants.DISTANCE_TO_UPDATE_MAP))
                 startIntentService(location);
     }
+
+    public AddressResult getAddressResult() {
+        return mAddressResult;
+    }
+
     /**
-     * Receiver for data sent from FetchAddressIntentService.
+     * Receiver for data sent from FetchAddressService.
      */
     class AddressResultReceiver extends ResultReceiver {
         public AddressResultReceiver(Handler handler) {
@@ -67,14 +75,18 @@ abstract class AddressTrackerHelper
         }
 
         /**
-         *  Receives data sent from FetchAddressIntentService and updates the UI in MainActivity.
+         *  Receives data sent from FetchAddressService and updates the UI in MainActivity.
          */
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
 
-            // Display the address string or an error message sent from the intent service.
-            mAddressResult.setAddress(resultData.getString(Constants.RESULT_DATA_KEY));
-            mAddressRequested = false;
+            // Check if we have error here
+            if(resultData.containsKey(FetchAddressService.ERROR_MESSAGE_KEY)) {
+                mAddressResult.setErrorMessage(resultData.getString(FetchAddressService.ERROR_MESSAGE_KEY));
+            } else {
+                mAddressResult.setAddress((Address) resultData.getParcelable(FetchAddressService.RESULT_DATA_KEY));
+                mAddressRequested = false;
+            }
             sendUpdatedAddress();
         }
     }
