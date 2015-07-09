@@ -19,7 +19,8 @@ public final class Constants {
 
 
     public static final String ENABLE_BACKGROUND_SERVICE = "enable_background_service_checkbox";
-    public static final String TRACK_LOCATION_ADDRESS = "track_location_address_checkbox";
+    public static final String TRACK_ADDRESS = "track_address_checkbox";
+    public static final String TRACK_ACTIVITY = "track_activity_checkbox";
 
     public static final double DISTANCE_TO_MOVE_CAMERA = 100;
     public static final double DISTANCE_TO_UPDATE_MAP = 100;
@@ -30,4 +31,16 @@ public final class Constants {
     public static final int ACTIVITY_RESULT = 2;
     public static final int LOCATION_SETTINGS_STATUS = 3;
     public static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = 4;
+
+    /**
+     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
+     */
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
+    /**
+     * The fastest rate for active location updates. Exact. Updates will never be more frequent
+     * than this value.
+     */
+    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+
 }

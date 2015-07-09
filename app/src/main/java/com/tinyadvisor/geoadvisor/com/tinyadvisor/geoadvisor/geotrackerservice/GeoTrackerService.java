@@ -40,8 +40,9 @@ public class GeoTrackerService extends Service implements
     ResultReceiver mGeoServiceResults;
 
     protected GoogleApiClient mGoogleApiClient;
-    protected LocationTrackerHelper mLocationTrackerHelper;
-    protected AddressTrackerHelper mAddresssTrackerHelper;
+    protected LocationTracker mLocationTracker;
+    protected AddressTracker mAddresssTracker;
+    protected ActivityTracker mActivityTracker;
     protected ActivityDetectionBroadcastReceiver mBroadcastReceiver;
 
     public static final int ONGOING_NOTIFICATION_ID = 1;
@@ -66,7 +67,7 @@ public class GeoTrackerService extends Service implements
         mGoogleApiClient.connect();
 
         // Init address tracker before location tracker thus it could handle first recieved location
-        mAddresssTrackerHelper = new AddressTrackerHelper() {
+        mAddresssTracker = new AddressTracker() {
             @Override
             public void sendResult(int resultCode, Bundle resultData) {
                 GeoTrackerService.this.sendResult(resultCode, resultData);
@@ -78,7 +79,7 @@ public class GeoTrackerService extends Service implements
             }
         };
 
-        mLocationTrackerHelper = new LocationTrackerHelper() {
+        mLocationTracker = new LocationTracker() {
             @Override
             public void sendResult(int resultCode, Bundle resultData) {
                 GeoTrackerService.this.sendResult(resultCode, resultData);
@@ -91,17 +92,37 @@ public class GeoTrackerService extends Service implements
 
             @Override
             public GoogleApiClient getGoogleApiClient() {
+
                 return mGoogleApiClient;
             }
         };
-        mLocationTrackerHelper.createLocationRequest();
-        mLocationTrackerHelper.checkLocationSettings();
+
+        mActivityTracker = new ActivityTracker() {
+            @Override
+            public void sendResult(int resultCode, Bundle resultData) {
+                GeoTrackerService.this.sendResult(resultCode, resultData);
+            }
+
+            @Override
+            public Context getPackageContext() {
+                return GeoTrackerService.this;
+            }
+
+            @Override
+            public GoogleApiClient getGoogleApiClient() {
+                return mGoogleApiClient;
+            }
+        };
+
+        mLocationTracker.createLocationRequest();
+        mLocationTracker.checkLocationSettings();
     }
 
     @Override
     public void onDestroy() {
         removeNotification();
-        mLocationTrackerHelper.stopLocationUpdates();
+        mLocationTracker.stopLocationUpdates();
+        mActivityTracker.removeActivityUpdates();
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
@@ -135,25 +156,35 @@ public class GeoTrackerService extends Service implements
         StringBuilder notificationTitle = new StringBuilder();
         StringBuilder notificationText = new StringBuilder();
 
-        Address address = mAddresssTrackerHelper.getAddressResult().getAddress();
+        Address address = mAddresssTracker.getAddressResult().getAddress();
+        DetectedActivity activity = mActivityTracker.getActivityResult().getActivity();
         notificationTitle.append(getResources().getString(R.string.app_name));
 
         if(address != null) {
 
             notificationTitle.append(": ");
 
+            if(activity != null) {
+                notificationTitle.append(activity.toString());
+            }
+
             notificationTitle.append("@");
             notificationTitle.append(address.getLocality());
 
-            if(mLocationTrackerHelper.getLocationResult().getLocation() != null) {
-                notificationText.append(mLocationTrackerHelper.getLocationResult().getState());
-                notificationText.append(System.lineSeparator());
-            }
-
-            notificationText.append(mAddresssTrackerHelper.getAddressResult().getState());
+            notificationText.append(mAddresssTracker.getAddressResult().getState());
 
         } else {
             notificationText.append(getResources().getString(R.string.obtaining_address));
+        }
+
+        if(activity != null) {
+            notificationText.append(mActivityTracker.getActivityResult().getState());
+            notificationText.append(System.lineSeparator());
+        }
+
+        if(mLocationTracker.getLocationResult().getLocation() != null) {
+            notificationText.append(mLocationTracker.getLocationResult().getState());
+            notificationText.append(System.lineSeparator());
         }
 
         Notification.Builder builder = new Notification.Builder(this)
@@ -218,11 +249,12 @@ public class GeoTrackerService extends Service implements
 
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if(location != null) {
-            mLocationTrackerHelper.onLocationChanged(location);
-            mAddresssTrackerHelper.onLocationChanged(location);
+            mLocationTracker.onLocationChanged(location);
+            mAddresssTracker.onLocationChanged(location);
         }
 
-        mLocationTrackerHelper.startLocationUpdates();
+        mLocationTracker.startLocationUpdates();
+        mActivityTracker.requestActivityUpdates();
     }
 
 
@@ -247,8 +279,8 @@ public class GeoTrackerService extends Service implements
      */
     @Override
     public void onLocationChanged(Location location) {
-        mLocationTrackerHelper.onLocationChanged(location);
-        mAddresssTrackerHelper.onLocationChanged(location);
+        mLocationTracker.onLocationChanged(location);
+        mAddresssTracker.onLocationChanged(location);
     }
     /**
      * Gets a PendingIntent to be sent for each activity detection.

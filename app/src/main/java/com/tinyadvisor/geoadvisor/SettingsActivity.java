@@ -96,7 +96,7 @@ public class SettingsActivity extends PreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             setupPreferenceValueAndSummary(findPreference(Constants.ENABLE_BACKGROUND_SERVICE));
-            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_LOCATION_ADDRESS));
+            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_ADDRESS));
 
         }
 
@@ -121,7 +121,8 @@ public class SettingsActivity extends PreferenceActivity {
 
                 if(preference.getKey().toString().equals(Constants.ENABLE_BACKGROUND_SERVICE)) {
 
-                    this.findPreference(Constants.TRACK_LOCATION_ADDRESS).setEnabled(boolValue);
+                    this.findPreference(Constants.TRACK_ADDRESS).setEnabled(boolValue);
+                    this.findPreference(Constants.TRACK_ACTIVITY).setEnabled(boolValue);
 
                     startBackgroundService(boolValue);
 

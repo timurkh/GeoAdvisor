@@ -21,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.ActivityResult;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.AddressResult;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.GeoTrackerService;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.LocationResult;
@@ -40,6 +41,8 @@ public class MapTabActivity extends Activity {
     protected TextView mAddressTextView;
     protected TextView mAddressTitleTextView;
 
+    protected ActivityResult mActivityResult = new ActivityResult();
+    private String mCurrentActivity;
     protected TextView mActivityTextView;
     protected TextView mActivityTitleTextView;
 
@@ -69,6 +72,7 @@ public class MapTabActivity extends Activity {
 
         mLocationResult.updateValuesFromBundle(savedInstanceState);
         mAddressResult.updateValuesFromBundle(savedInstanceState);
+        mActivityResult.updateValuesFromBundle(savedInstanceState);
 
         startGeoTrackerService();
         updateMapUI();
@@ -100,6 +104,8 @@ public class MapTabActivity extends Activity {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         mLocationResult.saveInstanceState(savedInstanceState);
         mAddressResult.saveInstanceState(savedInstanceState);
+        mActivityResult.saveInstanceState(savedInstanceState);
+
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -136,6 +142,9 @@ public class MapTabActivity extends Activity {
             if (mAddressResult.getDefined())
                 mCurrentAddress = mAddressResult.getAddressAsText();
 
+            if (mActivityResult.getDefined())
+                mCurrentActivity = mActivityResult.getActivityAsText();
+
             mLocationTitleTextView.setVisibility(View.VISIBLE);
             mLocationTextView.setVisibility(View.VISIBLE);
             mLocationTextView.setText(mCurrentLatLng.toString());
@@ -147,13 +156,22 @@ public class MapTabActivity extends Activity {
             mCurrentAddress = null;
         }
 
-        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_LOCATION_ADDRESS, true)) {
+        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_ADDRESS, true)) {
             mAddressTitleTextView.setVisibility(View.VISIBLE);
             mAddressTextView.setVisibility(View.VISIBLE);
             mAddressTextView.setText(mCurrentAddress);
         } else {
             mAddressTitleTextView.setVisibility(View.GONE);
             mAddressTextView.setVisibility(View.GONE);
+        }
+
+        if(mCurrentActivity != null && prefs.getBoolean(Constants.TRACK_ACTIVITY, true)) {
+            mActivityTitleTextView.setVisibility(View.VISIBLE);
+            mActivityTextView.setVisibility(View.VISIBLE);
+            mActivityTextView.setText(mCurrentActivity);
+        } else {
+            mActivityTitleTextView.setVisibility(View.GONE);
+            mActivityTextView.setVisibility(View.GONE);
         }
     }
 
@@ -209,6 +227,9 @@ public class MapTabActivity extends Activity {
                     mAddressResult.updateValuesFromBundle(resultData);
                     updateMapUI();
                     break;
+                case Constants.ACTIVITY_RESULT:
+                    mActivityResult.updateValuesFromBundle(resultData);
+                    updateMapUI();
                 case Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE:
                     GooglePlayServicesUtil.getErrorDialog(resultData.getInt("STATUS"), mActivity, 0).show();
                     break;

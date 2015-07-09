@@ -21,7 +21,8 @@ import java.util.Locale;
 /**
  * Created by tkhakimyanov on 14.06.2015.
  */
-public class FetchAddressService extends IntentService {
+public class AddressService extends IntentService {
+
     private static final String TAG = "FETCH_ADDRESS_SERVICE";
 
     public static final String RESULT_DATA_KEY = Constants.PACKAGE_NAME + ".RESULT_DATA_KEY";
@@ -36,7 +37,7 @@ public class FetchAddressService extends IntentService {
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
      */
-    public FetchAddressService() {
+    public AddressService() {
         super(TAG);
     }
 

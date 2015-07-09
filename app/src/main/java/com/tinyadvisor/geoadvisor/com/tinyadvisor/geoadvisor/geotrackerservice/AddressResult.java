@@ -22,9 +22,9 @@ public class AddressResult {
     protected Boolean mDefined = false;
 
     // Keys for storing activity state in the Bundle.
-    protected static final String LOCATION_ADDRESS_KEY = "location-address";
-    protected final static String LAST_UPDATED_TIME_KEY = "location-address-last-updated-time-key";
-    protected final static String ERROR_MESSAGE = "location-address-error-message";
+    protected static final String LOCATION_ADDRESS_KEY = "address";
+    protected final static String LAST_UPDATED_TIME_KEY = "address-last-updated-time-key";
+    protected final static String ERROR_MESSAGE = "address-error-message";
 
     void Reset () {
         mLastUpdateTime = null;
@@ -102,17 +102,13 @@ public class AddressResult {
             } else if (savedInstanceState.keySet().contains(LOCATION_ADDRESS_KEY)) {
                 mCurrentAddress = savedInstanceState.getParcelable(LOCATION_ADDRESS_KEY);
                 mDefined = true;
-                log.append(" mAddressOutput=" + getAddressAsText());
+                log.append(" mAddress=" + getAddressAsText());
             } else {
                 mDefined = false;
             }
 
             Log.i(TAG, log.toString());
         }
-    }
-
-    public static String makeFlat(String text) {
-        return text.replace(System.lineSeparator(), ", ");
     }
 
     public void saveInstanceState(Bundle savedInstanceState){
@@ -125,7 +121,7 @@ public class AddressResult {
         }
         else if(mCurrentAddress != null) {
             savedInstanceState.putParcelable(LOCATION_ADDRESS_KEY, mCurrentAddress);
-            log.append(" mAddressOutput=" + mCurrentAddress);
+            log.append(" mAddress=" + mCurrentAddress);
         }
 
         if(mLastUpdateTime != null) {
@@ -144,7 +140,7 @@ public class AddressResult {
             state.append("[");
             state.append(getLastUpdateTime());
             state.append("] ");
-            state.append(makeFlat(address));
+            state.append(address);
             return state.toString();
         }
         return null;

@@ -27,7 +27,7 @@ public class LocationResult {
 
     void Reset () {
         mCurrentLocation = null;
-        mLastUpdateTime = null;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
     }
 
     /**
@@ -107,18 +107,20 @@ public class LocationResult {
     }
 
     public String getState() {
+        StringBuilder state = new StringBuilder();
+        state.append("[");
+        state.append(getLastUpdateTime());
+        state.append("] ");
+
         if (getLocation() != null) {
-            StringBuilder state = new StringBuilder();
-            state.append("[");
-            state.append(getLastUpdateTime());
-            state.append("] ");
             state.append(getLatLng().toString());
             state.append(" accuracy ");
             state.append(getLocation().getAccuracy());
             state.append("m");
-            return state.toString();
+        } else {
+            state.append("Obtaining location");
         }
-        return null;
+        return state.toString();
     }
 
 }

@@ -18,26 +18,15 @@ import com.tinyadvisor.geoadvisor.Constants;
 /**
  * Created by tkhakimyanov on 28.06.2015.
  */
-abstract class LocationTrackerHelper implements
-        ILocationTrackerService {
+abstract class LocationTracker implements
+        ILocationTracker {
 
-    protected final static String TAG = "LOCATION_TRACKER_HELPER";
+    protected final static String TAG = "LOCATION_TRACKER";
 
 
     protected LocationRequest mLocationRequest;
     protected LocationSettingsRequest mLocationSettingsRequest;
     LocationResult mLocationResult = new LocationResult();;
-
-    /**
-     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
-     */
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
-    /**
-     * The fastest rate for active location updates. Exact. Updates will never be more frequent
-     * than this value.
-     */
-    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
     void sendUpdatedLocation () {
         Bundle bundle = new Bundle();
@@ -67,8 +56,8 @@ abstract class LocationTrackerHelper implements
      */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setInterval(Constants.UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(Constants.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
     }
 

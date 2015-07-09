@@ -7,9 +7,14 @@
         android:defaultValue="true" />
 
     <CheckBoxPreference
-        android:key="track_location_address_checkbox"
-        android:title="@string/track_location_address"
-        android:summary="@string/track_location_address_summary"
+        android:key="track_address_checkbox"
+        android:title="@string/track_address"
+        android:summary="@string/track_address_summary"
+        android:defaultValue="true" />
+    <CheckBoxPreference
+        android:key="track_activity_checkbox"
+        android:title="@string/track_activity"
+        android:summary="@string/track_activity_summary"
         android:defaultValue="true" />
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->

@@ -1,15 +1,15 @@
 package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
+import android.content.Context;
 import android.os.Bundle;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 
 /**
- * Created by tkhakimyanov on 28.06.2015.
+ * Created by tkhakimyanov on 27.06.2015.
  */
-public interface ILocationTrackerService {
+public interface IAddresssTracker {
+
     void sendResult(int resultCode, Bundle resultData);
-    LocationListener getLocationListener();
-    GoogleApiClient getGoogleApiClient();
+    Context getPackageContext();
 }
