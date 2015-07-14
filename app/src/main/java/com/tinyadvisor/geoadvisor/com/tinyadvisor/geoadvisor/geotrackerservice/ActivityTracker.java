@@ -1,12 +1,19 @@
 package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -24,13 +31,9 @@ abstract class ActivityTracker implements
 
     protected final static String TAG = "ACTIVITY_TRACKER";
 
-    private ActivityResult mActivityResult;
-    private DetectedActivityResultReceiver mActivityResultReceiver = new DetectedActivityResultReceiver(new Handler());
-    private PendingIntent mActivityDetectionPendingIntent;
+    private ActivityResult mActivityResult = new ActivityResult();
+    protected ActivityBroadcastReceiver mBroadcastActivityReceiver = new ActivityBroadcastReceiver();
 
-    ActivityTracker() {
-        mActivityResult = new ActivityResult();
-    }
 
     ActivityResult getActivityResult() {
         return mActivityResult;
@@ -40,27 +43,33 @@ abstract class ActivityTracker implements
      * Gets a PendingIntent to be sent for each activity detection.
      */
     private PendingIntent getActivityDetectionPendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (mActivityDetectionPendingIntent != null) {
-            return mActivityDetectionPendingIntent;
-        }
         Intent intent = new Intent(getPackageContext(), ActivityService.class);
-
-        // Pass the result receiver as an extra to the service.
-        intent.putExtra(Constants.RECEIVER, mActivityResultReceiver);
 
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // requestActivityUpdates() and removeActivityUpdates().
-        mActivityDetectionPendingIntent = PendingIntent.getService(getPackageContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        return mActivityDetectionPendingIntent;
+        return PendingIntent.getService(getPackageContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void requestActivityUpdates() {
 
+        if (!getGoogleApiClient().isConnected()) {
+            Toast.makeText(getPackageContext(), "GoogleApiClient is not connected yet",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //register broadcasts receiver
+        mBroadcastActivityReceiver = new ActivityBroadcastReceiver();
+        LocalBroadcastManager.getInstance(getPackageContext()).registerReceiver(mBroadcastActivityReceiver,
+                new IntentFilter(Constants.BROADCAST_ACTIVITY));
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
+        String updateIntervalString = prefs.getString(Constants.UPDATE_INTERVAL_LIST, Constants.DEFAULT_UPDATE_INTERVAL);
+        int updateInterval = Integer.parseInt(updateIntervalString);
+
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
                 getGoogleApiClient(),
-                Constants.UPDATE_INTERVAL_IN_MILLISECONDS,
+                updateInterval,
                 getActivityDetectionPendingIntent()
         ).setResultCallback(this);
     }
@@ -72,6 +81,11 @@ abstract class ActivityTracker implements
                 getGoogleApiClient(),
                 getActivityDetectionPendingIntent()
         ).setResultCallback(this);
+
+        // Unregister broadcasts receiver
+        LocalBroadcastManager.getInstance(getPackageContext()).unregisterReceiver(mBroadcastActivityReceiver);
+
+        mActivityResult.setActivity(null);
     }
 
     /**
@@ -83,31 +97,10 @@ abstract class ActivityTracker implements
      */
     public void onResult(Status status) {
         if (status.isSuccess()) {
-
+            Log.i(TAG, "Successfully added or removed activity detection");
         } else {
             mActivityResult.setErrorMessage(status.getStatusMessage());
             Log.e(TAG, "Error adding or removing activity detection: " + status.getStatusMessage());
-        }
-    }
-
-    /**
-     * Receiver for data sent from AddressService.
-     */
-    class DetectedActivityResultReceiver extends ResultReceiver {
-        public DetectedActivityResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-
-            // Check if we have error here
-            if(resultData.containsKey(ActivityService.ERROR_MESSAGE_KEY)) {
-                mActivityResult.setErrorMessage(resultData.getString(AddressService.ERROR_MESSAGE_KEY));
-            } else {
-                mActivityResult.setActivity((DetectedActivity) resultData.getParcelable(ActivityService.RESULT_DATA_KEY));
-            }
-            sendUpdatedActivity();
         }
     }
 
@@ -115,5 +108,25 @@ abstract class ActivityTracker implements
         Bundle bundle = new Bundle();
         mActivityResult.saveInstanceState(bundle);
         sendResult(Constants.ACTIVITY_RESULT, bundle);
+    }
+
+
+    public void switchActivityUpdates() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
+        if(prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true))
+            requestActivityUpdates();
+        else
+            removeActivityUpdates();
+    }
+
+    public class ActivityBroadcastReceiver extends BroadcastReceiver {
+        protected static final String TAG = "ACTIVITY_BROADCAST_RECEIVER";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            DetectedActivity activity = intent.getParcelableExtra(Constants.ACTIVITY_EXTRA);
+            mActivityResult.setActivity(activity);
+            sendUpdatedActivity();
+        }
     }
 }

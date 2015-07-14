@@ -7,11 +7,15 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 
@@ -25,9 +29,6 @@ import com.google.android.gms.location.LocationServices;
 import com.tinyadvisor.geoadvisor.Constants;
 import com.tinyadvisor.geoadvisor.MapTabActivity;
 import com.tinyadvisor.geoadvisor.R;
-
-
-import java.util.ArrayList;
 
 public class GeoTrackerService extends Service implements
         GoogleApiClient.ConnectionCallbacks,
@@ -43,7 +44,6 @@ public class GeoTrackerService extends Service implements
     protected LocationTracker mLocationTracker;
     protected AddressTracker mAddresssTracker;
     protected ActivityTracker mActivityTracker;
-    protected ActivityDetectionBroadcastReceiver mBroadcastReceiver;
 
     public static final int ONGOING_NOTIFICATION_ID = 1;
 
@@ -59,10 +59,10 @@ public class GeoTrackerService extends Service implements
 
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .build();
         mGoogleApiClient.connect();
 
@@ -94,6 +94,11 @@ public class GeoTrackerService extends Service implements
             public GoogleApiClient getGoogleApiClient() {
 
                 return mGoogleApiClient;
+            }
+
+            @Override
+            public Context getPackageContext() {
+                return GeoTrackerService.this;
             }
         };
 
@@ -138,6 +143,13 @@ public class GeoTrackerService extends Service implements
             Log.w(TAG, "onStartCommand: null intent is passed, perhaps activity is dead");
         }
 
+        mLocationTracker.sendUpdatedLocation();
+        mAddresssTracker.sendUpdatedAddress();
+        mActivityTracker.sendUpdatedActivity();
+
+        if (mGoogleApiClient.isConnected())
+            mActivityTracker.switchActivityUpdates();
+
         return START_STICKY;
     }
 
@@ -157,7 +169,7 @@ public class GeoTrackerService extends Service implements
         StringBuilder notificationText = new StringBuilder();
 
         Address address = mAddresssTracker.getAddressResult().getAddress();
-        DetectedActivity activity = mActivityTracker.getActivityResult().getActivity();
+        String activity = mActivityTracker.getActivityResult().getActivityAsText();
         notificationTitle.append(getResources().getString(R.string.app_name));
 
         if(address != null) {
@@ -165,16 +177,18 @@ public class GeoTrackerService extends Service implements
             notificationTitle.append(": ");
 
             if(activity != null) {
-                notificationTitle.append(activity.toString());
+                notificationTitle.append(activity);
             }
 
             notificationTitle.append("@");
             notificationTitle.append(address.getLocality());
 
             notificationText.append(mAddresssTracker.getAddressResult().getState());
+            notificationText.append(System.lineSeparator());
 
         } else {
             notificationText.append(getResources().getString(R.string.obtaining_address));
+            notificationText.append(System.lineSeparator());
         }
 
         if(activity != null) {
@@ -254,7 +268,7 @@ public class GeoTrackerService extends Service implements
         }
 
         mLocationTracker.startLocationUpdates();
-        mActivityTracker.requestActivityUpdates();
+        mActivityTracker.switchActivityUpdates();
     }
 
 
@@ -281,37 +295,5 @@ public class GeoTrackerService extends Service implements
     public void onLocationChanged(Location location) {
         mLocationTracker.onLocationChanged(location);
         mAddresssTracker.onLocationChanged(location);
-    }
-    /**
-     * Gets a PendingIntent to be sent for each activity detection.
-     *//*
-    private PendingIntent getActivityDetectionPendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (mActivityDetectionPendingIntent != null) {
-            return mActivityDetectionPendingIntent;
-        }
-        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
-
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }*/
-
-    /**
-     * Receiver for intents sent by DetectedActivitiesIntentService via a sendBroadcast().
-     * Receives a list of one or more DetectedActivity objects associated with the current state of
-     * the device.
-     */
-    public class ActivityDetectionBroadcastReceiver extends BroadcastReceiver {
-        protected static final String TAG = "activity-detection-response-receiver";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            ArrayList<DetectedActivity> updatedActivities =
-                    intent.getParcelableArrayListExtra(Constants.ACTIVITY_EXTRA);
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(Constants.DETECTED_ACTIVITIES, updatedActivities );
-            sendResult(Constants.ACTIVITY_RESULT, bundle);
-        }
     }
 }

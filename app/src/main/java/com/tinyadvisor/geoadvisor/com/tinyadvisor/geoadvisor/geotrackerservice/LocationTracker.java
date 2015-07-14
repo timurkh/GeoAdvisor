@@ -1,7 +1,9 @@
 package com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice;
 
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.common.api.PendingResult;
@@ -56,8 +58,12 @@ abstract class LocationTracker implements
      */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(Constants.UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(Constants.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
+        String updateIntervalString = prefs.getString(Constants.UPDATE_INTERVAL_LIST, Constants.DEFAULT_UPDATE_INTERVAL);
+        int updateInterval = Integer.parseInt(updateIntervalString);
+
+        mLocationRequest.setInterval(updateInterval);
+        mLocationRequest.setFastestInterval(updateInterval / Constants.FASTEST_UPDATE_INTERVAL_COEFFICIENT);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
     }
 

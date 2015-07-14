@@ -48,7 +48,7 @@ public class ActivityResult {
 
     public String getActivityAsText() {
         if(mActivity != null) {
-            return mActivity.toString();
+            return DetectedActivity.zzgq(mActivity.getType());
         }
 
         return null;
@@ -114,6 +114,8 @@ public class ActivityResult {
             state.append(getLastUpdateTime());
             state.append("] ");
             state.append(activity);
+            state.append(" ");
+            state.append(getActivity().getConfidence());
             return state.toString();
         }
         return null;

@@ -10,6 +10,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
@@ -83,7 +84,7 @@ public class SettingsActivity extends PreferenceActivity {
             // current value.
             Object value = PreferenceManager
                     .getDefaultSharedPreferences(preference.getContext()).getAll().get(preference.getKey());
-            onPreferenceChange(preference, value);
+            onPreferenceChange(preference, value, false);
         }
 
         @Override
@@ -95,14 +96,18 @@ public class SettingsActivity extends PreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            setupPreferenceValueAndSummary(findPreference(Constants.ENABLE_BACKGROUND_SERVICE));
-            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_ADDRESS));
-
+            setupPreferenceValueAndSummary(findPreference(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX));
+            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_ADDRESS_CHECKBOX));
+            setupPreferenceValueAndSummary(findPreference(Constants.TRACK_ACTIVITY_CHECKBOX));
+            setupPreferenceValueAndSummary(findPreference(Constants.UPDATE_INTERVAL_LIST));
         }
 
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
+            return onPreferenceChange(preference, value, true);
+        }
 
+        boolean onPreferenceChange(Preference preference, Object value, boolean startService) {
             if (preference instanceof ListPreference) {
                 String stringValue = value.toString();
 
@@ -119,13 +124,18 @@ public class SettingsActivity extends PreferenceActivity {
             } else if (preference instanceof CheckBoxPreference) {
                 Boolean boolValue = (Boolean)value;
 
-                if(preference.getKey().toString().equals(Constants.ENABLE_BACKGROUND_SERVICE)) {
+                if(preference.getKey().toString().equals(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX)) {
 
-                    this.findPreference(Constants.TRACK_ADDRESS).setEnabled(boolValue);
-                    this.findPreference(Constants.TRACK_ACTIVITY).setEnabled(boolValue);
+                    this.findPreference(Constants.TRACK_ADDRESS_CHECKBOX).setEnabled(boolValue);
+                    this.findPreference(Constants.TRACK_ACTIVITY_CHECKBOX).setEnabled(boolValue);
 
-                    startBackgroundService(boolValue);
+                    if(startService)
+                        startBackgroundService(boolValue);
 
+                } else if(preference.getKey().toString().equals(Constants.TRACK_ACTIVITY_CHECKBOX)) {
+
+                    if(startService)
+                        startBackgroundService(true);
                 }
 
             } else {

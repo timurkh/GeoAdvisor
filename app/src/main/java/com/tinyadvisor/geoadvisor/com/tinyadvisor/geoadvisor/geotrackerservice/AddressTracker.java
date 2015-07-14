@@ -8,10 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
-import android.view.View;
-import android.widget.Toast;
 
-import com.google.android.gms.location.ActivityRecognition;
 import com.tinyadvisor.geoadvisor.Constants;
 
 /**
@@ -38,7 +35,7 @@ abstract class AddressTracker
      */
     protected void startIntentService(Location location) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
-        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
+        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
 
             mAddressRequested = true;
             mAddressRequestedLocation = location;
@@ -60,9 +57,14 @@ abstract class AddressTracker
     }
 
     public void onLocationChanged(Location location) {
-        if(!mAddressRequested)
-            if (mAddressResult.getAddress() == null || mAddressRequestedLocation == null || (mAddressRequestedLocation.distanceTo(location) > Constants.DISTANCE_TO_UPDATE_MAP))
-                startIntentService(location);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
+        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
+            if (!mAddressRequested)
+                if (mAddressResult.getAddress() == null || mAddressRequestedLocation == null || (mAddressRequestedLocation.distanceTo(location) > Constants.DISTANCE_TO_UPDATE_MAP))
+                    startIntentService(location);
+        } else {
+            mAddressResult.setAddress(null);
+        }
     }
 
     public AddressResult getAddressResult() {

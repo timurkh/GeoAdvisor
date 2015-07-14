@@ -87,7 +87,7 @@ public class MapTabActivity extends Activity {
 
     void startGeoTrackerService() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
+        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
             mGeoServiceResults = new GeoServiceResultReceiver(this, null);
             Intent intent = new Intent(this, GeoTrackerService.class);
             intent.putExtra(Constants.RECEIVER, mGeoServiceResults);
@@ -120,7 +120,7 @@ public class MapTabActivity extends Activity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String currentAddress;
 
-        if(newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE, true)) {
+        if(newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
             mGoogleMap.setMyLocationEnabled(true);
             boolean cameraTracksCurrentLocation = true;
             LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
@@ -140,14 +140,14 @@ public class MapTabActivity extends Activity {
             mCurrentLatLng = newLatLng;
 
             if (mAddressResult.getDefined())
-                mCurrentAddress = mAddressResult.getAddressAsText();
+                mCurrentAddress = mAddressResult.getState();
 
             if (mActivityResult.getDefined())
-                mCurrentActivity = mActivityResult.getActivityAsText();
+                mCurrentActivity = mActivityResult.getState();
 
             mLocationTitleTextView.setVisibility(View.VISIBLE);
             mLocationTextView.setVisibility(View.VISIBLE);
-            mLocationTextView.setText(mCurrentLatLng.toString());
+            mLocationTextView.setText(mLocationResult.getState());
         }
         else {
             mGoogleMap.setMyLocationEnabled(false);
@@ -156,7 +156,7 @@ public class MapTabActivity extends Activity {
             mCurrentAddress = null;
         }
 
-        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_ADDRESS, true)) {
+        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_ADDRESS_CHECKBOX, true)) {
             mAddressTitleTextView.setVisibility(View.VISIBLE);
             mAddressTextView.setVisibility(View.VISIBLE);
             mAddressTextView.setText(mCurrentAddress);
@@ -165,7 +165,7 @@ public class MapTabActivity extends Activity {
             mAddressTextView.setVisibility(View.GONE);
         }
 
-        if(mCurrentActivity != null && prefs.getBoolean(Constants.TRACK_ACTIVITY, true)) {
+        if(mCurrentActivity != null && prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true)) {
             mActivityTitleTextView.setVisibility(View.VISIBLE);
             mActivityTextView.setVisibility(View.VISIBLE);
             mActivityTextView.setText(mCurrentActivity);
@@ -230,6 +230,7 @@ public class MapTabActivity extends Activity {
                 case Constants.ACTIVITY_RESULT:
                     mActivityResult.updateValuesFromBundle(resultData);
                     updateMapUI();
+                    break;
                 case Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE:
                     GooglePlayServicesUtil.getErrorDialog(resultData.getInt("STATUS"), mActivity, 0).show();
                     break;

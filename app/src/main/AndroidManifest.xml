@@ -26,7 +26,6 @@
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -35,9 +34,6 @@ Service to asynchronously fetch a location address using a Geocoder. Setting the
 android:exported attribute to "false" stops other apps from starting this
 service, even when using an explicit intent.
         -->
-        <service
-            android:name=".com.tinyadvisor.geoadvisor.geotrackerservice.AddressService"
-            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -48,7 +44,12 @@ service, even when using an explicit intent.
             android:enabled="true"
             android:exported="true" >
         </service>
-
+        <service
+            android:name=".com.tinyadvisor.geoadvisor.geotrackerservice.AddressService"
+            android:exported="false" />
+        <service
+            android:name=".com.tinyadvisor.geoadvisor.geotrackerservice.ActivityService"
+            android:exported="false" />
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
@@ -62,6 +63,7 @@ service, even when using an explicit intent.
             android:label="@string/title_activity_logs"
             android:parentActivityName=".MapTabActivity">
         </activity>
+
     </application>
 
 </manifest>
