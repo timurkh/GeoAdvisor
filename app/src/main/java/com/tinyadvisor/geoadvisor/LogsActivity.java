@@ -13,7 +13,7 @@ public class LogsActivity extends Activity {
         setContentView(R.layout.activity_logs);
         //getActionBar().setDisplayHomeAsUpEnabled(true);
 
-/*        LogsActivityFragment logs = new LogsActivityFragment();
+/*        LogsFragment logs = new LogsFragment();
         logs.setArguments(getIntent().getExtras());
         getFragmentManager().beginTransaction().add(R.id.logs_fragment, logs).commit();
  */   }

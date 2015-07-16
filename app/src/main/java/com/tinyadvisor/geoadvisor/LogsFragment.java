@@ -16,12 +16,12 @@ import java.io.InputStreamReader;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class LogsActivityFragment extends Fragment {
+public class LogsFragment extends Fragment {
 
     TextView mTextView;
     ScrollView mScrollView;
 
-    public LogsActivityFragment() {
+    public LogsFragment() {
     }
 
     @Override

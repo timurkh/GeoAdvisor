@@ -4,18 +4,13 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ResultReceiver;
-import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 
@@ -23,11 +18,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.tinyadvisor.geoadvisor.Constants;
-import com.tinyadvisor.geoadvisor.MapTabActivity;
+import com.tinyadvisor.geoadvisor.MapTabFragment;
 import com.tinyadvisor.geoadvisor.R;
 
 public class GeoTrackerService extends Service implements
@@ -161,7 +155,7 @@ public class GeoTrackerService extends Service implements
 
     private void setNotificationMessage() {
 
-        Intent notificationIntent = new Intent(this, MapTabActivity.class);
+        Intent notificationIntent = new Intent(this, MapTabFragment.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
