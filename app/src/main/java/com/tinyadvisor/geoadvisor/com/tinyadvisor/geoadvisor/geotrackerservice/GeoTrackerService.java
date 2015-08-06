@@ -21,6 +21,7 @@ import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.tinyadvisor.geoadvisor.Constants;
+import com.tinyadvisor.geoadvisor.MapActivity;
 import com.tinyadvisor.geoadvisor.MapTabFragment;
 import com.tinyadvisor.geoadvisor.R;
 
@@ -155,7 +156,7 @@ public class GeoTrackerService extends Service implements
 
     private void setNotificationMessage() {
 
-        Intent notificationIntent = new Intent(this, MapTabFragment.class);
+        Intent notificationIntent = new Intent(this, MapActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 

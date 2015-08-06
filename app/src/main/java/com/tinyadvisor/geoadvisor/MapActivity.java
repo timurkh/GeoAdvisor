@@ -31,7 +31,7 @@ public class MapActivity extends Activity {
     GeoServiceResultReceiver mGeoServiceResults;
 
     MapTabFragment getMapFragment() {
-        return (MapTabFragment)getFragmentManager().findFragmentById(R.id.map_fragment);
+        return (MapTabFragment)getFragmentManager().findFragmentById(R.id.map_tab_fragment);
     }
 
     @Override
@@ -99,29 +99,33 @@ public class MapActivity extends Activity {
 
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
-            switch (resultCode) {
-                case Constants.LOCATION_RESULT:
-                    getMapFragment().updateLocationResult(resultData);
-                    break;
-                case Constants.ADDRESS_RESULT:
-                    getMapFragment().updateAddressResult(resultData);
-                    break;
-                case Constants.ACTIVITY_RESULT:
-                    getMapFragment().updateActivityResult(resultData);
-                    break;
-                case Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE:
-                    GooglePlayServicesUtil.getErrorDialog(resultData.getInt("STATUS"), mActivity, 0).show();
-                    break;
-                case Constants.LOCATION_SETTINGS_STATUS:
-                    try {
-                        Status status = resultData.getParcelable("STATUS");
-                        // Show the dialog by calling startResolutionForResult(), and check the result
-                        // in onActivityResult().
-                        status.startResolutionForResult(mActivity, REQUEST_CHECK_SETTINGS);
-                    } catch (IntentSender.SendIntentException e) {
-                        Log.e(TAG, "PendingIntent unable to execute request.");
-                    }
-                    break;
+            MapTabFragment mapFragment = getMapFragment();
+
+            if(mapFragment!=null) {
+                switch (resultCode) {
+                    case Constants.LOCATION_RESULT:
+                        mapFragment.updateLocationResult(resultData);
+                        break;
+                    case Constants.ADDRESS_RESULT:
+                        mapFragment.updateAddressResult(resultData);
+                        break;
+                    case Constants.ACTIVITY_RESULT:
+                        mapFragment.updateActivityResult(resultData);
+                        break;
+                    case Constants.GOOGLE_PLAY_SERVICES_UNAVAILABLE:
+                        GooglePlayServicesUtil.getErrorDialog(resultData.getInt("STATUS"), mActivity, 0).show();
+                        break;
+                    case Constants.LOCATION_SETTINGS_STATUS:
+                        try {
+                            Status status = resultData.getParcelable("STATUS");
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult(mActivity, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.e(TAG, "PendingIntent unable to execute request.");
+                        }
+                        break;
+                }
             }
             super.onReceiveResult(resultCode, resultData);
         }

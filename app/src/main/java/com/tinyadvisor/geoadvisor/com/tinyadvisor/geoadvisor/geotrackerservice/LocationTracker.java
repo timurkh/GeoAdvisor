@@ -107,6 +107,8 @@ abstract class LocationTracker implements
     }
 
     public void onLocationChanged(Location location) {
+        Log.d(TAG, "onLocationChanged(" + location.toString() + ")");
+
         if(mLocationResult.setLocation(location))
             sendUpdatedLocation();
     }
@@ -115,6 +117,8 @@ abstract class LocationTracker implements
      * Requests location updates from the FusedLocationApi.
      */
     protected void startLocationUpdates() {
+        Log.d(TAG, "startLocationUpdates");
+
         // The final argument to {@code requestLocationUpdates()} is a LocationListener
         // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
         LocationServices.FusedLocationApi.requestLocationUpdates(
@@ -125,6 +129,8 @@ abstract class LocationTracker implements
      * Removes location updates from the FusedLocationApi.
      */
     protected void stopLocationUpdates() {
+        Log.d(TAG, "stopLocationUpdates");
+
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
