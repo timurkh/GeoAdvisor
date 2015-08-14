@@ -1,18 +1,18 @@
 package com.tinyadvisor.geoadvisor;
 
-import android.app.Activity;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.ActivityResult;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.AddressResult;
@@ -51,7 +51,7 @@ public class MapTabFragment extends Fragment {
         mActivityTextView = (TextView)view.findViewById(R.id.detected_activity_name);
         mActivityTitleTextView = (TextView)view.findViewById(R.id.detected_activity_name_title);
 
-        MapFragment mapFragment = (MapFragment)getChildFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment)getChildFragmentManager().findFragmentById(R.id.map);
         mGoogleMap = mapFragment.getMap();
         mGoogleMap.setMyLocationEnabled(true);
         mGoogleMap.setIndoorEnabled(true);
@@ -96,60 +96,62 @@ public class MapTabFragment extends Fragment {
     protected void updateMapUI() {
         LatLng newLatLng = mLocationResult.getLatLng();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        FragmentActivity activity = getActivity();
+        if(activity != null) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
 
-        if(newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
-            mGoogleMap.setMyLocationEnabled(true);
-            boolean cameraTracksCurrentLocation = true;
-            LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
-            if (mCurrentLatLng != null) {
-                float[] distance = new float[1];
-                Location.distanceBetween(cameraLatLng.latitude, cameraLatLng.longitude, mCurrentLatLng.latitude, mCurrentLatLng.longitude, distance);
-                cameraTracksCurrentLocation = distance[0] < Constants.DISTANCE_TO_MOVE_CAMERA;
+            if (newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
+                mGoogleMap.setMyLocationEnabled(true);
+                boolean cameraTracksCurrentLocation = true;
+                LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
+                if (mCurrentLatLng != null) {
+                    float[] distance = new float[1];
+                    Location.distanceBetween(cameraLatLng.latitude, cameraLatLng.longitude, mCurrentLatLng.latitude, mCurrentLatLng.longitude, distance);
+                    cameraTracksCurrentLocation = distance[0] < Constants.DISTANCE_TO_MOVE_CAMERA;
+                }
+
+                if (cameraTracksCurrentLocation) {
+                    if (mCurrentLatLng == null) // we are first time here
+                        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLng, 15));
+                    else
+                        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(newLatLng));
+                }
+
+                mCurrentLatLng = newLatLng;
+
+                if (mAddressResult.getDefined())
+                    mCurrentAddress = mAddressResult.getState();
+
+                if (mActivityResult.getDefined())
+                    mCurrentActivity = mActivityResult.getState();
+
+                mLocationTitleTextView.setVisibility(View.VISIBLE);
+                mLocationTextView.setVisibility(View.VISIBLE);
+                mLocationTextView.setText(mLocationResult.getState());
+            } else {
+                mGoogleMap.setMyLocationEnabled(false);
+                mLocationTitleTextView.setVisibility(View.GONE);
+                mLocationTextView.setVisibility(View.GONE);
+                mCurrentAddress = null;
             }
 
-            if (cameraTracksCurrentLocation) {
-                if (mCurrentLatLng == null) // we are first time here
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLng, 15));
-                else
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(newLatLng));
+            if (mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_ADDRESS_CHECKBOX, true)) {
+                mAddressTitleTextView.setVisibility(View.VISIBLE);
+                mAddressTextView.setVisibility(View.VISIBLE);
+                mAddressTextView.setText(mCurrentAddress);
+            } else {
+                mAddressTitleTextView.setVisibility(View.GONE);
+                mAddressTextView.setVisibility(View.GONE);
             }
 
-            mCurrentLatLng = newLatLng;
-
-            if (mAddressResult.getDefined())
-                mCurrentAddress = mAddressResult.getState();
-
-            if (mActivityResult.getDefined())
-                mCurrentActivity = mActivityResult.getState();
-
-            mLocationTitleTextView.setVisibility(View.VISIBLE);
-            mLocationTextView.setVisibility(View.VISIBLE);
-            mLocationTextView.setText(mLocationResult.getState());
-        }
-        else {
-            mGoogleMap.setMyLocationEnabled(false);
-            mLocationTitleTextView.setVisibility(View.GONE);
-            mLocationTextView.setVisibility(View.GONE);
-            mCurrentAddress = null;
-        }
-
-        if(mCurrentAddress != null && prefs.getBoolean(Constants.TRACK_ADDRESS_CHECKBOX, true)) {
-            mAddressTitleTextView.setVisibility(View.VISIBLE);
-            mAddressTextView.setVisibility(View.VISIBLE);
-            mAddressTextView.setText(mCurrentAddress);
-        } else {
-            mAddressTitleTextView.setVisibility(View.GONE);
-            mAddressTextView.setVisibility(View.GONE);
-        }
-
-        if(mCurrentActivity != null && prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true)) {
-            mActivityTitleTextView.setVisibility(View.VISIBLE);
-            mActivityTextView.setVisibility(View.VISIBLE);
-            mActivityTextView.setText(mCurrentActivity);
-        } else {
-            mActivityTitleTextView.setVisibility(View.GONE);
-            mActivityTextView.setVisibility(View.GONE);
+            if (mCurrentActivity != null && prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true)) {
+                mActivityTitleTextView.setVisibility(View.VISIBLE);
+                mActivityTextView.setVisibility(View.VISIBLE);
+                mActivityTextView.setText(mCurrentActivity);
+            } else {
+                mActivityTitleTextView.setVisibility(View.GONE);
+                mActivityTextView.setVisibility(View.GONE);
+            }
         }
     }
 
