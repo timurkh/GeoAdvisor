@@ -96,12 +96,14 @@ public class MainActivity extends FragmentActivity {
             }
         };
 
-        for (int i = 0; i < 2; i++) {
-            actionBar.addTab(
-                    actionBar.newTab()
-                            .setText("Tab " + (i + 1))
-                            .setTabListener(tabListener));
-        }
+        actionBar.addTab(
+                actionBar.newTab()
+                        .setText("Current stats")
+                        .setTabListener(tabListener));
+        actionBar.addTab(
+                actionBar.newTab()
+                        .setText("Retrospective")
+                        .setTabListener(tabListener));
     }
 
     @Override

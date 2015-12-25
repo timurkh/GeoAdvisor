@@ -39,6 +39,8 @@ public class GeoTrackerService extends Service implements
     protected AddressTracker mAddresssTracker;
     protected ActivityTracker mActivityTracker;
 
+    protected ActivityAtLocation mCurrentActivityAtLocation = new ActivityAtLocation();
+
     public static final int ONGOING_NOTIFICATION_ID = 1;
 
 
@@ -216,9 +218,14 @@ public class GeoTrackerService extends Service implements
     }
 
     public void sendResult(int resultCode, Bundle resultData) {
+
         if(mGeoServiceResults != null)
             mGeoServiceResults.send(resultCode, resultData);
         setNotificationMessage();
+
+        if(mCurrentActivityAtLocation.setResult(resultCode, resultData)) {
+            //add to some hash and clean-up old ones
+        }
     }
 
     void sendGooglePlayServiceUnavailable(int status) {

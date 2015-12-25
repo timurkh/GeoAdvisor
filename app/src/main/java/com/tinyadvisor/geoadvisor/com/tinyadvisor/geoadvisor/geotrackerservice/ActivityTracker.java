@@ -110,7 +110,6 @@ abstract class ActivityTracker implements
         sendResult(Constants.ACTIVITY_RESULT, bundle);
     }
 
-
     public void switchActivityUpdates() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
         if(prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true))
