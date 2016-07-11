@@ -50,6 +50,10 @@ public class MainActivity extends FragmentActivity {
         return (MapTabFragment)mAdvisorPagerAdapter.getMapFragment();
     }
 
+    StatsTabFragment getStatsFragment() {
+        return (StatsTabFragment)mAdvisorPagerAdapter.getStatsFragment();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final ActionBar actionBar = getActionBar();
@@ -190,6 +194,10 @@ public class MainActivity extends FragmentActivity {
                             Log.e(TAG, "PendingIntent unable to execute request.");
                         }
                         break;
+                    case Constants.STATS_RESULT:
+                        getStatsFragment().setTopLocations(resultData.getParcelableArray(Constants.STATS_TOP_LOCATIONS));
+                        getStatsFragment().setTopActivities(resultData.getParcelableArray(Constants.STATS_TOP_ACTIVITIES));
+                        break;
                 }
             }
             super.onReceiveResult(resultCode, resultData);
@@ -230,6 +238,10 @@ public class MainActivity extends FragmentActivity {
 
         MapTabFragment getMapFragment() {
             return mMapFragment;
+        }
+
+        StatsTabFragment getStatsFragment() {
+            return mStatsTabFragment;
         }
     }
 

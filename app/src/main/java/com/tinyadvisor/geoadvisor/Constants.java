@@ -31,7 +31,12 @@ public final class Constants {
     public static final int ACTIVITY_RESULT = 2;
     public static final int LOCATION_SETTINGS_STATUS = 3;
     public static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = 4;
+    public static final int STATS_RESULT = 5;
+
 
     public static final int FASTEST_UPDATE_INTERVAL_COEFFICIENT = 2;
     public static final String DEFAULT_UPDATE_INTERVAL = "1000";
+
+    public static final String STATS_TOP_ACTIVITIES = "stats-top-activities";
+    public static final String STATS_TOP_LOCATIONS = "stats-top-locations";
 }

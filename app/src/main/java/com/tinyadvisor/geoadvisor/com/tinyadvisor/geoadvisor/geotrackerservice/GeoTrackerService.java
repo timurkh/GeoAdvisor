@@ -11,6 +11,8 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.ResultReceiver;
 import android.util.Log;
 
@@ -25,6 +27,7 @@ import com.tinyadvisor.geoadvisor.Constants;
 import com.tinyadvisor.geoadvisor.MainActivity;
 import com.tinyadvisor.geoadvisor.R;
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,8 +37,8 @@ public class GeoTrackerService extends Service implements
         LocationListener {
 
     protected final static String TAG = "GEO_TRACKER_SERVICE";
-    public static final long WRITE_INTERVAL = 60 * 1000; // 60 seconds
     public static final int ONGOING_NOTIFICATION_ID = 1;
+    public static final int MSG_GET_STATS = 1;
 
     ResultReceiver mGeoServiceResults;
 
@@ -45,9 +48,10 @@ public class GeoTrackerService extends Service implements
     protected ActivityTracker mActivityTracker;
 
     // run on another Thread to avoid crash
-    private Handler mHandler = new Handler();
     // timer handling
+    private Handler mHandler = new Handler();
     private Timer mTimer = null;
+    ResultsCollection mResultsCollection;
 
     @Override
     public void onCreate() {
@@ -131,7 +135,7 @@ public class GeoTrackerService extends Service implements
             mTimer = new Timer();
         }
         // schedule task
-        mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, WRITE_INTERVAL);
+        mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, ResultsCollection.WRITE_INTERVAL);
     }
 
     class TimeWriteResultsTask extends TimerTask {
@@ -139,9 +143,10 @@ public class GeoTrackerService extends Service implements
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-
+                    mResultsCollection.add(mActivityTracker.getActivityResult(), mAddresssTracker.getAddressResult(), mLocationTracker.getLocationResult());
                 }
             });
+        }
     }
 
     @Override
@@ -174,10 +179,32 @@ public class GeoTrackerService extends Service implements
         return START_STICKY;
     }
 
+    /**
+     * Handler of incoming messages from clients.
+     */
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_GET_STATS:
+                    Bundle bundle = new Bundle();
+                    mResultsCollection.saveInstanceState(bundle);
+                    GeoTrackerService.this.sendResult(Constants.STATS_RESULT, bundle);
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    /**
+     * Target we publish for clients to send messages to IncomingHandler.
+     */
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
+
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return mMessenger.getBinder();
     }
 
     private void setNotificationMessage() {
