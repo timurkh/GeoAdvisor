@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.util.Log;
@@ -24,13 +25,17 @@ import com.tinyadvisor.geoadvisor.Constants;
 import com.tinyadvisor.geoadvisor.MainActivity;
 import com.tinyadvisor.geoadvisor.R;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class GeoTrackerService extends Service implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
     protected final static String TAG = "GEO_TRACKER_SERVICE";
-
+    public static final long WRITE_INTERVAL = 60 * 1000; // 60 seconds
+    public static final int ONGOING_NOTIFICATION_ID = 1;
 
     ResultReceiver mGeoServiceResults;
 
@@ -39,8 +44,10 @@ public class GeoTrackerService extends Service implements
     protected AddressTracker mAddresssTracker;
     protected ActivityTracker mActivityTracker;
 
-    public static final int ONGOING_NOTIFICATION_ID = 1;
-
+    // run on another Thread to avoid crash
+    private Handler mHandler = new Handler();
+    // timer handling
+    private Timer mTimer = null;
 
     @Override
     public void onCreate() {
@@ -115,6 +122,26 @@ public class GeoTrackerService extends Service implements
 
         mLocationTracker.createLocationRequest();
         mLocationTracker.checkLocationSettings();
+
+        // cancel if already existed
+        if(mTimer != null) {
+            mTimer.cancel();
+        } else {
+            // recreate new
+            mTimer = new Timer();
+        }
+        // schedule task
+        mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, WRITE_INTERVAL);
+    }
+
+    class TimeWriteResultsTask extends TimerTask {
+        @Override public void run () {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
     }
 
     @Override

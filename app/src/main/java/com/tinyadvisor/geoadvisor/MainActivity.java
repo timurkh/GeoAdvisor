@@ -31,7 +31,11 @@ import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.G
  */
 public class MainActivity extends FragmentActivity {
 
-    protected  static final String TAG = "MAP_ACTIVITY";
+    protected static final String TAG = "MAP_ACTIVITY";
+    protected static final String [] TAB_NAMES = new String [] {
+            "Map",
+            "Stats"
+    };
 
     /**
      * Constant used in the location settings dialog.
@@ -99,7 +103,7 @@ public class MainActivity extends FragmentActivity {
         for (int i = 0; i < 2; i++) {
             actionBar.addTab(
                     actionBar.newTab()
-                            .setText("Tab " + (i + 1))
+                            .setText(TAB_NAMES[i])
                             .setTabListener(tabListener));
         }
     }
