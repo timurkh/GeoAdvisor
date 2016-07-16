@@ -12,6 +12,7 @@ public final class Constants {
             "com.tinyadvisor.geoadvisor";
 
     public static final String RECEIVER = PACKAGE_NAME + ".RECEIVER";
+    public static final String COMMAND = PACKAGE_NAME + ".COMMAND";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME + ".LOCATION_DATA_EXTRA";
     public static final String ACTIVITY_EXTRA = PACKAGE_NAME + ".ACTIVITY_EXTRA";
     public static final String BROADCAST_ACTIVITY = PACKAGE_NAME + ".BROADCAST_ACTIVITY";
@@ -32,6 +33,7 @@ public final class Constants {
     public static final int LOCATION_SETTINGS_STATUS = 3;
     public static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = 4;
     public static final int STATS_RESULT = 5;
+    public static final int RESTART_TIMER = 6;
 
 
     public static final int FASTEST_UPDATE_INTERVAL_COEFFICIENT = 2;

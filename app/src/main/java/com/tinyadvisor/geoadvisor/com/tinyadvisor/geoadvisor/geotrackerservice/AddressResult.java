@@ -43,6 +43,7 @@ public class AddressResult {
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         mCurrentAddress = address;
         mErrorMessage = null;
+        mDefined = true;
     }
 
     public Address getAddress() {

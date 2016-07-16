@@ -19,6 +19,9 @@ import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.G
 
 public class SettingsActivity extends PreferenceActivity {
 
+    public SettingsActivity() {
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,10 +64,12 @@ public class SettingsActivity extends PreferenceActivity {
         return GeneralPreferenceFragment.class.getName().equals(fragmentName);
     }
 
-    protected void startBackgroundService(Boolean boolValue) {
+    protected void startBackgroundService(Boolean boolValue, Integer command) {
         if(boolValue) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            this.startService(new Intent(this, GeoTrackerService.class));
+            Intent intent = new Intent(this, GeoTrackerService.class);
+            if(command != null)
+                intent.putExtra(Constants.COMMAND, command);
+            this.startService(intent);
         }
         else {
             this.stopService(new Intent(this, GeoTrackerService.class));
@@ -72,9 +77,10 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public class GeneralPreferenceFragment extends PreferenceFragment
             implements Preference.OnPreferenceChangeListener {
+
+        GeneralPreferenceFragment() {}
 
         private void setupPreferenceValueAndSummary(Preference preference) {
             // Set the listener to watch for value changes.
@@ -107,7 +113,7 @@ public class SettingsActivity extends PreferenceActivity {
             return onPreferenceChange(preference, value, true);
         }
 
-        boolean onPreferenceChange(Preference preference, Object value, boolean startService) {
+        boolean onPreferenceChange(Preference preference, Object value, boolean changeServiceState) {
             if (preference instanceof ListPreference) {
                 String stringValue = value.toString();
 
@@ -121,6 +127,9 @@ public class SettingsActivity extends PreferenceActivity {
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
+
+                if(changeServiceState)
+                    startBackgroundService(true, Constants.RESTART_TIMER);
             } else if (preference instanceof CheckBoxPreference) {
                 Boolean boolValue = (Boolean)value;
 
@@ -129,13 +138,16 @@ public class SettingsActivity extends PreferenceActivity {
                     this.findPreference(Constants.TRACK_ADDRESS_CHECKBOX).setEnabled(boolValue);
                     this.findPreference(Constants.TRACK_ACTIVITY_CHECKBOX).setEnabled(boolValue);
 
-                    if(startService)
-                        startBackgroundService(boolValue);
+                    if(changeServiceState)
+                        startBackgroundService(boolValue, 0);
 
                 } else if(preference.getKey().toString().equals(Constants.TRACK_ACTIVITY_CHECKBOX)) {
+                    //if(changeServiceState)
+                    //    startBackgroundService(true, 0);
 
-                    if(startService)
-                        startBackgroundService(true);
+                } else if(preference.getKey().toString().equals(Constants.TRACK_ADDRESS_CHECKBOX)) {
+                    //if(changeServiceState)
+                    //    startBackgroundService(true, 0);
                 }
 
             } else {

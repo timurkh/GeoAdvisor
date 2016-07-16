@@ -1,5 +1,7 @@
 package com.tinyadvisor.geoadvisor;
 
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -10,17 +12,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.ActivityResult;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.AddressResult;
 import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.LocationResult;
 
-public class MapTabFragment extends Fragment {
+public class MapTabFragment extends Fragment implements OnMapReadyCallback {
 
-    protected  static final String TAG = "MAP_FRAGMENT";
+    protected static final String TAG = "MAP_FRAGMENT";
     protected GoogleMap mGoogleMap;
 
     protected LocationResult mLocationResult = new LocationResult();
@@ -44,18 +48,15 @@ public class MapTabFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
-        mLocationTextView = (TextView)view.findViewById(R.id.location);
-        mLocationTitleTextView = (TextView)view.findViewById(R.id.location_title);
-        mAddressTextView = (TextView)view.findViewById(R.id.detected_address);
-        mAddressTitleTextView = (TextView)view.findViewById(R.id.detected_address_title);
-        mActivityTextView = (TextView)view.findViewById(R.id.detected_activity_name);
-        mActivityTitleTextView = (TextView)view.findViewById(R.id.detected_activity_name_title);
+        mLocationTextView = (TextView) view.findViewById(R.id.location);
+        mLocationTitleTextView = (TextView) view.findViewById(R.id.location_title);
+        mAddressTextView = (TextView) view.findViewById(R.id.detected_address);
+        mAddressTitleTextView = (TextView) view.findViewById(R.id.detected_address_title);
+        mActivityTextView = (TextView) view.findViewById(R.id.detected_activity_name);
+        mActivityTitleTextView = (TextView) view.findViewById(R.id.detected_activity_name_title);
 
-        SupportMapFragment mapFragment = (SupportMapFragment)getChildFragmentManager().findFragmentById(R.id.map);
-        mGoogleMap = mapFragment.getMap();
-        mGoogleMap.setMyLocationEnabled(true);
-        mGoogleMap.setIndoorEnabled(true);
-
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
         mLocationResult.updateValuesFromBundle(savedInstanceState);
         mAddressResult.updateValuesFromBundle(savedInstanceState);
         mActivityResult.updateValuesFromBundle(savedInstanceState);
@@ -65,6 +66,17 @@ public class MapTabFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mGoogleMap = googleMap;
+        if(mGoogleMap != null) {
+            mGoogleMap.setMyLocationEnabled(true);
+            mGoogleMap.setIndoorEnabled(true);
+        }
+    }
 
     /**
      * Stores activity data in the Bundle.
@@ -101,22 +113,23 @@ public class MapTabFragment extends Fragment {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
 
             if (newLatLng != null && prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
-                mGoogleMap.setMyLocationEnabled(true);
-                boolean cameraTracksCurrentLocation = true;
-                LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
-                if (mCurrentLatLng != null) {
-                    float[] distance = new float[1];
-                    Location.distanceBetween(cameraLatLng.latitude, cameraLatLng.longitude, mCurrentLatLng.latitude, mCurrentLatLng.longitude, distance);
-                    cameraTracksCurrentLocation = distance[0] < Constants.DISTANCE_TO_MOVE_CAMERA;
-                }
+                if(mGoogleMap != null) {
+                    mGoogleMap.setMyLocationEnabled(true);
+                    boolean cameraTracksCurrentLocation = true;
+                    LatLng cameraLatLng = mGoogleMap.getCameraPosition().target;
+                    if (mCurrentLatLng != null) {
+                        float[] distance = new float[1];
+                        Location.distanceBetween(cameraLatLng.latitude, cameraLatLng.longitude, mCurrentLatLng.latitude, mCurrentLatLng.longitude, distance);
+                        cameraTracksCurrentLocation = distance[0] < Constants.DISTANCE_TO_MOVE_CAMERA;
+                    }
 
-                if (cameraTracksCurrentLocation) {
-                    if (mCurrentLatLng == null) // we are first time here
-                        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLng, 15));
-                    else
-                        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(newLatLng));
+                    if (cameraTracksCurrentLocation) {
+                        if (mCurrentLatLng == null) // we are first time here
+                            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLng, 15));
+                        else
+                            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(newLatLng));
+                    }
                 }
-
                 mCurrentLatLng = newLatLng;
 
                 if (mAddressResult.getDefined())
@@ -129,7 +142,8 @@ public class MapTabFragment extends Fragment {
                 mLocationTextView.setVisibility(View.VISIBLE);
                 mLocationTextView.setText(mLocationResult.getState());
             } else {
-                mGoogleMap.setMyLocationEnabled(false);
+                if(mGoogleMap != null)
+                    mGoogleMap.setMyLocationEnabled(false);
                 mLocationTitleTextView.setVisibility(View.GONE);
                 mLocationTextView.setVisibility(View.GONE);
                 mCurrentAddress = null;

@@ -6,14 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
 import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 
@@ -27,7 +27,6 @@ import com.tinyadvisor.geoadvisor.Constants;
 import com.tinyadvisor.geoadvisor.MainActivity;
 import com.tinyadvisor.geoadvisor.R;
 
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -44,14 +43,14 @@ public class GeoTrackerService extends Service implements
 
     protected GoogleApiClient mGoogleApiClient;
     protected LocationTracker mLocationTracker;
-    protected AddressTracker mAddresssTracker;
+    protected AddressTracker mAddressTracker;
     protected ActivityTracker mActivityTracker;
 
     // run on another Thread to avoid crash
     // timer handling
     private Handler mHandler = new Handler();
     private Timer mTimer = null;
-    ResultsCollection mResultsCollection;
+    ResultsCollection mResultsCollection = new ResultsCollection();
 
     @Override
     public void onCreate() {
@@ -71,8 +70,14 @@ public class GeoTrackerService extends Service implements
                 .build();
         mGoogleApiClient.connect();
 
+        initTrackers();
+        setupTimer();
+    }
+
+    void initTrackers() {
+
         // Init address tracker before location tracker thus it could handle first recieved location
-        mAddresssTracker = new AddressTracker() {
+        mAddressTracker = new AddressTracker() {
             @Override
             public void sendResult(int resultCode, Bundle resultData) {
                 GeoTrackerService.this.sendResult(resultCode, resultData);
@@ -126,16 +131,23 @@ public class GeoTrackerService extends Service implements
 
         mLocationTracker.createLocationRequest();
         mLocationTracker.checkLocationSettings();
+    }
 
+    void setupTimer() {
         // cancel if already existed
         if(mTimer != null) {
             mTimer.cancel();
-        } else {
-            // recreate new
-            mTimer = new Timer();
         }
+
+        // recreate new
+        mTimer = new Timer();
+
         // schedule task
-        mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, ResultsCollection.WRITE_INTERVAL);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Integer writeInterval = Integer.parseInt(prefs.getString(Constants.UPDATE_INTERVAL_LIST, "60000"));
+
+        mTimer = new Timer();
+        mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, writeInterval);
     }
 
     class TimeWriteResultsTask extends TimerTask {
@@ -143,7 +155,7 @@ public class GeoTrackerService extends Service implements
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    mResultsCollection.add(mActivityTracker.getActivityResult(), mAddresssTracker.getAddressResult(), mLocationTracker.getLocationResult());
+                    mResultsCollection.add(mActivityTracker.getActivityResult(), mAddressTracker.getAddressResult());
                 }
             });
         }
@@ -162,49 +174,35 @@ public class GeoTrackerService extends Service implements
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
-            mGeoServiceResults = intent.getParcelableExtra(Constants.RECEIVER);
+            int command = intent.getIntExtra(Constants.COMMAND, 0);
+            switch(command) {
+                case Constants.STATS_RESULT:
+                    Bundle bundle = new Bundle();
+                    mResultsCollection.saveInstanceState(bundle);
+                    sendResult(Constants.STATS_RESULT, bundle);
+                    break;
+                case Constants.RESTART_TIMER:
+                    setupTimer();
+                    break;
+                default:
+                    mGeoServiceResults = intent.getParcelableExtra(Constants.RECEIVER);
+                    mLocationTracker.sendUpdatedLocation();
+                    mAddressTracker.sendUpdatedAddress();
+                    mActivityTracker.sendUpdatedActivity();
+                    mActivityTracker.switchActivityUpdates();
+            }
         }
         else {
             mGeoServiceResults = null;
             Log.w(TAG, "onStartCommand: null intent is passed, perhaps activity is dead");
         }
 
-        mLocationTracker.sendUpdatedLocation();
-        mAddresssTracker.sendUpdatedAddress();
-        mActivityTracker.sendUpdatedActivity();
-
-        if (mGoogleApiClient.isConnected())
-            mActivityTracker.switchActivityUpdates();
-
         return START_STICKY;
     }
 
-    /**
-     * Handler of incoming messages from clients.
-     */
-    class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_GET_STATS:
-                    Bundle bundle = new Bundle();
-                    mResultsCollection.saveInstanceState(bundle);
-                    GeoTrackerService.this.sendResult(Constants.STATS_RESULT, bundle);
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
-    /**
-     * Target we publish for clients to send messages to IncomingHandler.
-     */
-    final Messenger mMessenger = new Messenger(new IncomingHandler());
-
     @Override
     public IBinder onBind(Intent intent) {
-        return mMessenger.getBinder();
+        return null;
     }
 
     private void setNotificationMessage() {
@@ -214,29 +212,36 @@ public class GeoTrackerService extends Service implements
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         StringBuilder notificationTitle = new StringBuilder();
-        StringBuilder notificationText = new StringBuilder();
-
-        Address address = mAddresssTracker.getAddressResult().getAddress();
-        String activity = mActivityTracker.getActivityResult().getActivityAsText();
         notificationTitle.append(getResources().getString(R.string.app_name));
 
-        if(address != null) {
+        StringBuilder notificationText = new StringBuilder();
 
-            notificationTitle.append(": ");
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-            if(activity != null) {
-                notificationTitle.append(activity);
+        String activity = null;
+        if(prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true))
+            activity = mActivityTracker.getActivityResult().getActivityAsText();
+
+        if(prefs.getBoolean(Constants.TRACK_ADDRESS_CHECKBOX, true)) {
+            Address address = mAddressTracker.getAddressResult().getAddress();
+            if (address != null) {
+
+                notificationTitle.append(": ");
+
+                if (activity != null) {
+                    notificationTitle.append(activity);
+                }
+
+                notificationTitle.append("@");
+                notificationTitle.append(address.getLocality());
+
+                notificationText.append(mAddressTracker.getAddressResult().getState());
+                notificationText.append(System.lineSeparator());
+
+            } else {
+                notificationText.append(getResources().getString(R.string.obtaining_address));
+                notificationText.append(System.lineSeparator());
             }
-
-            notificationTitle.append("@");
-            notificationTitle.append(address.getLocality());
-
-            notificationText.append(mAddresssTracker.getAddressResult().getState());
-            notificationText.append(System.lineSeparator());
-
-        } else {
-            notificationText.append(getResources().getString(R.string.obtaining_address));
-            notificationText.append(System.lineSeparator());
         }
 
         if(activity != null) {
@@ -312,7 +317,7 @@ public class GeoTrackerService extends Service implements
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if(location != null) {
             mLocationTracker.onLocationChanged(location);
-            mAddresssTracker.onLocationChanged(location);
+            mAddressTracker.onLocationChanged(location);
         }
 
         mLocationTracker.startLocationUpdates();
@@ -342,6 +347,6 @@ public class GeoTrackerService extends Service implements
     @Override
     public void onLocationChanged(Location location) {
         mLocationTracker.onLocationChanged(location);
-        mAddresssTracker.onLocationChanged(location);
+        mAddressTracker.onLocationChanged(location);
     }
 }

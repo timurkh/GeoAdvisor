@@ -10,6 +10,7 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Messenger;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
@@ -57,7 +58,7 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final ActionBar actionBar = getActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setDisplayShowHomeEnabled(false);
 
         super.onCreate(savedInstanceState);
@@ -195,8 +196,8 @@ public class MainActivity extends FragmentActivity {
                         }
                         break;
                     case Constants.STATS_RESULT:
-                        getStatsFragment().setTopLocations(resultData.getParcelableArray(Constants.STATS_TOP_LOCATIONS));
-                        getStatsFragment().setTopActivities(resultData.getParcelableArray(Constants.STATS_TOP_ACTIVITIES));
+                        getStatsFragment().setTopLocations(resultData.getStringArray(Constants.STATS_TOP_LOCATIONS));
+                        getStatsFragment().setTopActivities(resultData.getStringArray(Constants.STATS_TOP_ACTIVITIES));
                         break;
                 }
             }

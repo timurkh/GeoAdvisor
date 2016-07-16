@@ -48,7 +48,7 @@ public class ActivityResult {
 
     public String getActivityAsText() {
         if(mActivity != null) {
-            return DetectedActivity.zzgq(mActivity.getType());
+            return DetectedActivity.zzsu(mActivity.getType());
         }
 
         return null;

@@ -58,7 +58,7 @@ abstract class AddressTracker
 
     public void onLocationChanged(Location location) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
-        if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
+        if(prefs.getBoolean(Constants.TRACK_ADDRESS_CHECKBOX, true)) {
             if (!mAddressRequested)
                 if (mAddressResult.getAddress() == null || mAddressRequestedLocation == null || (mAddressRequestedLocation.distanceTo(location) > Constants.DISTANCE_TO_UPDATE_MAP))
                     startIntentService(location);
