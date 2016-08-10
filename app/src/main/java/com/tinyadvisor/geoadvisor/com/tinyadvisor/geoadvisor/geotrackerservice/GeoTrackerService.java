@@ -282,9 +282,11 @@ public class GeoTrackerService extends Service implements
     }
 
     public void sendResult(int resultCode, Bundle resultData) {
+
         if(mGeoServiceResults != null)
             mGeoServiceResults.send(resultCode, resultData);
         setNotificationMessage();
+
     }
 
     void sendGooglePlayServiceUnavailable(int status) {
