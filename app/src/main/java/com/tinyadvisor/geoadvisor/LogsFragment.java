@@ -30,7 +30,7 @@ public class LogsFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_logs, container, false);
         try {
-            Process process = Runtime.getRuntime().exec("logcat -d");
+            Process process = Runtime.getRuntime().exec("logcat -d -v time " + Constants.TAG + ":I *:S");
             BufferedReader bufferedReader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
 

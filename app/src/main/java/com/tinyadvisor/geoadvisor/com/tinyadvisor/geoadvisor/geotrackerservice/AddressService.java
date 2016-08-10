@@ -23,8 +23,6 @@ import java.util.Locale;
  */
 public class AddressService extends IntentService {
 
-    private static final String TAG = "FETCH_ADDRESS_SERVICE";
-
     public static final String RESULT_DATA_KEY = Constants.PACKAGE_NAME + ".RESULT_DATA_KEY";
     public static final String ERROR_MESSAGE_KEY = Constants.PACKAGE_NAME + ".RESULT_ERROR_MESSAGE";
 
@@ -38,13 +36,13 @@ public class AddressService extends IntentService {
      *
      */
     public AddressService() {
-        super(TAG);
+        super("AddressService");
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        Log.d(TAG, "onHandleIntent");
+        Log.d(Constants.TAG, "AddressService: onHandleIntent");
 
         String errorMessage = "";
 
@@ -52,7 +50,7 @@ public class AddressService extends IntentService {
 
         // Check if receiver was properly registered.
         if (mReceiver == null) {
-            Log.wtf(TAG, "No receiver received. There is nowhere to send the results.");
+            Log.wtf(Constants.TAG, "AddressService: No receiver received, nowhere to send the results");
             return;
         }
 
@@ -63,7 +61,7 @@ public class AddressService extends IntentService {
         // send an error error message and return.
         if (location == null) {
             errorMessage = getString(R.string.no_location_data_provided);
-            Log.wtf(TAG, errorMessage);
+            Log.wtf(Constants.TAG, "AddressService: No location data provided");
             deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
             return;
         }
@@ -95,11 +93,11 @@ public class AddressService extends IntentService {
         } catch (IOException ioException) {
             // Catch network or other I/O problems.
             errorMessage = getString(R.string.service_not_available);
-            Log.e(TAG, errorMessage, ioException);
+            Log.e(Constants.TAG, "AddressService: " + errorMessage, ioException);
         } catch (IllegalArgumentException illegalArgumentException) {
             // Catch invalid latitude or longitude values.
             errorMessage = getString(R.string.invalid_lat_long_used);
-            Log.e(TAG, errorMessage + ". " +
+            Log.e(Constants.TAG, "AddressService: " + errorMessage + ". " +
                     "Latitude = " + location.getLatitude() +
                     ", Longitude = " + location.getLongitude(), illegalArgumentException);
         }
@@ -108,12 +106,12 @@ public class AddressService extends IntentService {
         if (addresses == null || addresses.size()  == 0) {
             if (errorMessage.isEmpty()) {
                 errorMessage = getString(R.string.no_address_found);
-                Log.e(TAG, errorMessage);
+                Log.e(Constants.TAG, "AddressService: " + errorMessage);
             }
             deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
         } else {
             Address address = addresses.get(0);
-            Log.i(TAG, "Address found");
+            Log.i(Constants.TAG, "AddressService: Address found, " + address.toString());
             deliverResultToReceiver(Constants.SUCCESS_RESULT, address);
         }
     }

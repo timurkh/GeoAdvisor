@@ -24,7 +24,6 @@ import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.L
 
 public class MapTabFragment extends Fragment implements OnMapReadyCallback {
 
-    protected static final String TAG = "MAP_FRAGMENT";
     protected GoogleMap mGoogleMap;
 
     protected LocationResult mLocationResult = new LocationResult();

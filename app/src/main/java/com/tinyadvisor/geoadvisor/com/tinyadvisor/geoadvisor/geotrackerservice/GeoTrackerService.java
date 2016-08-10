@@ -134,10 +134,7 @@ public class GeoTrackerService extends Service implements
     }
 
     void setupTimer() {
-        // cancel if already existed
-        if(mTimer != null) {
-            mTimer.cancel();
-        }
+        stopTimer();
 
         // recreate new
         mTimer = new Timer();
@@ -148,6 +145,13 @@ public class GeoTrackerService extends Service implements
 
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(new TimeWriteResultsTask(), 0, writeInterval);
+    }
+
+    void stopTimer() {
+        //TODO serialize existing stats - need define data model
+        if(mTimer != null) {
+            mTimer.cancel();
+        }
     }
 
     class TimeWriteResultsTask extends TimerTask {
@@ -163,6 +167,7 @@ public class GeoTrackerService extends Service implements
 
     @Override
     public void onDestroy() {
+        stopTimer();
         removeNotification();
         mLocationTracker.stopLocationUpdates();
         mActivityTracker.removeActivityUpdates();
@@ -184,12 +189,14 @@ public class GeoTrackerService extends Service implements
                 case Constants.RESTART_TIMER:
                     setupTimer();
                     break;
+                case Constants.SWITCH_ACTIVITY_DETECTION:
+                    mActivityTracker.toggleActivityUpdates();
+                    break;
                 default:
                     mGeoServiceResults = intent.getParcelableExtra(Constants.RECEIVER);
                     mLocationTracker.sendUpdatedLocation();
                     mAddressTracker.sendUpdatedAddress();
                     mActivityTracker.sendUpdatedActivity();
-                    mActivityTracker.switchActivityUpdates();
             }
         }
         else {
@@ -321,7 +328,7 @@ public class GeoTrackerService extends Service implements
         }
 
         mLocationTracker.startLocationUpdates();
-        mActivityTracker.switchActivityUpdates();
+        mActivityTracker.toggleActivityUpdates();
     }
 
 

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
+import com.tinyadvisor.geoadvisor.Constants;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -12,8 +13,6 @@ import java.util.Date;
  * Created by tkhakimyanov on 09.07.2015.
  */
 public class ActivityResult {
-
-    protected final static String TAG = "ACTIVITY_RESULT";
 
     protected String mLastUpdateTime;
     protected DetectedActivity mActivity;
@@ -62,7 +61,7 @@ public class ActivityResult {
 
         if (savedInstanceState != null) {
 
-            StringBuilder log = new StringBuilder(). append("Loaded values from bundle");
+            StringBuilder log = new StringBuilder(). append("ActivityResult: Loaded values from bundle");
             if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_KEY)) {
                 mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_KEY);
                 log.append(" mLastUpdateTime=" + mLastUpdateTime);
@@ -80,13 +79,13 @@ public class ActivityResult {
                 mDefined = false;
             }
 
-            Log.i(TAG, log.toString());
+            Log.i(Constants.TAG, log.toString());
         }
     }
 
     public void saveInstanceState(Bundle savedInstanceState){
 
-        StringBuilder log = new StringBuilder("Saved instance state ");
+        StringBuilder log = new StringBuilder("ActivityResult: Saved instance state ");
 
         if(mErrorMessage != null) {
             savedInstanceState.putString(ERROR_MESSAGE, mErrorMessage);
@@ -102,7 +101,7 @@ public class ActivityResult {
             log.append(" mLastUpdateTime=" + mLastUpdateTime);
         }
 
-        Log.i(TAG, log.toString());
+        Log.i(Constants.TAG, log.toString());
     }
 
     public String getState() {

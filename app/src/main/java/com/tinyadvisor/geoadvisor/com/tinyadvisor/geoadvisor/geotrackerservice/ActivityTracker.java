@@ -29,8 +29,6 @@ abstract class ActivityTracker implements
         IActivityTracker,
         ResultCallback<Status> {
 
-    protected final static String TAG = "ACTIVITY_TRACKER";
-
     private ActivityResult mActivityResult = new ActivityResult();
     protected ActivityBroadcastReceiver mBroadcastActivityReceiver = new ActivityBroadcastReceiver();
 
@@ -97,10 +95,10 @@ abstract class ActivityTracker implements
      */
     public void onResult(Status status) {
         if (status.isSuccess()) {
-            Log.i(TAG, "Successfully added or removed activity detection");
+            Log.i(Constants.TAG, "ActivityTracker: Successfully added or removed activity detection");
         } else {
             mActivityResult.setErrorMessage(status.getStatusMessage());
-            Log.e(TAG, "Error adding or removing activity detection: " + status.getStatusMessage());
+            Log.e(Constants.TAG, "ActivityTracker: Error adding or removing activity detection: " + status.getStatusMessage());
         }
     }
 
@@ -111,7 +109,7 @@ abstract class ActivityTracker implements
     }
 
 
-    public void switchActivityUpdates() {
+    public void toggleActivityUpdates() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getPackageContext());
         if(prefs.getBoolean(Constants.TRACK_ACTIVITY_CHECKBOX, true))
             requestActivityUpdates();
@@ -120,8 +118,6 @@ abstract class ActivityTracker implements
     }
 
     public class ActivityBroadcastReceiver extends BroadcastReceiver {
-        protected static final String TAG = "ACTIVITY_BROADCAST_RECEIVER";
-
         @Override
         public void onReceive(Context context, Intent intent) {
             DetectedActivity activity = intent.getParcelableExtra(Constants.ACTIVITY_EXTRA);

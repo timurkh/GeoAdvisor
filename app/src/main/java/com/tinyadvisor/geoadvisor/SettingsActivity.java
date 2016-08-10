@@ -142,8 +142,8 @@ public class SettingsActivity extends PreferenceActivity {
                         startBackgroundService(boolValue, 0);
 
                 } else if(preference.getKey().toString().equals(Constants.TRACK_ACTIVITY_CHECKBOX)) {
-                    //if(changeServiceState)
-                    //    startBackgroundService(true, 0);
+                    if(changeServiceState)
+                        startBackgroundService(true, Constants.SWITCH_ACTIVITY_DETECTION);
 
                 } else if(preference.getKey().toString().equals(Constants.TRACK_ADDRESS_CHECKBOX)) {
                     //if(changeServiceState)

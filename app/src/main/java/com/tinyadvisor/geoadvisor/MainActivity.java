@@ -32,7 +32,6 @@ import com.tinyadvisor.geoadvisor.com.tinyadvisor.geoadvisor.geotrackerservice.G
  */
 public class MainActivity extends FragmentActivity {
 
-    protected static final String TAG = "MAP_ACTIVITY";
     protected static final String [] TAB_NAMES = new String [] {
             "Map",
             "Stats"
@@ -192,7 +191,7 @@ public class MainActivity extends FragmentActivity {
                             // in onActivityResult().
                             status.startResolutionForResult(mActivity, REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
-                            Log.e(TAG, "PendingIntent unable to execute request.");
+                            Log.e(Constants.TAG, "GeoServiceResultReceiver: status.startResolutionForResult failed.");
                         }
                         break;
                     case Constants.STATS_RESULT:

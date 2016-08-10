@@ -34,6 +34,7 @@ public final class Constants {
     public static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = 4;
     public static final int STATS_RESULT = 5;
     public static final int RESTART_TIMER = 6;
+    public static final int SWITCH_ACTIVITY_DETECTION = 7;
 
 
     public static final int FASTEST_UPDATE_INTERVAL_COEFFICIENT = 2;
@@ -41,4 +42,6 @@ public final class Constants {
 
     public static final String STATS_TOP_ACTIVITIES = "stats-top-activities";
     public static final String STATS_TOP_LOCATIONS = "stats-top-locations";
+
+    public static final String TAG = "GEOADVISOR";
 }

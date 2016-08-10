@@ -19,18 +19,16 @@ import java.util.List;
  */
 public class ActivityService extends IntentService {
 
-    protected static final String TAG = "ACTIVITY_SERVICE";
-
     public static final String RESULT_DATA_KEY = Constants.PACKAGE_NAME + ".RESULT_DATA_KEY";
     public static final String ERROR_MESSAGE_KEY = Constants.PACKAGE_NAME + ".RESULT_ERROR_MESSAGE";
 
     public ActivityService() {
-        super(TAG);
+        super("ActivityService");
     }
 
     @Override
     public void onCreate() {
-        Log.i(TAG, "Service created");
+        Log.i(Constants.TAG, "ActivityService created");
         super.onCreate();
     }
 
@@ -52,7 +50,7 @@ public class ActivityService extends IntentService {
                     mostProbableActivity = betterActivity;
             }
 
-            Log.i(TAG, mostProbableActivity.toString());
+            Log.i(Constants.TAG, "ActivityService: detected " + mostProbableActivity.toString());
 
             // Check if receiver was properly registered.
             Intent localIntent = new Intent(Constants.BROADCAST_ACTIVITY);
