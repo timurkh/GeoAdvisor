@@ -8,20 +8,26 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Messenger;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.Manifest;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.Status;
@@ -52,6 +58,43 @@ public class MainActivity extends FragmentActivity {
 
     StatsTabFragment getStatsFragment() {
         return (StatsTabFragment)mAdvisorPagerAdapter.getStatsFragment();
+    }
+
+    public void startGeoTrackerService(){
+        //Check permissions and only in case of success launch GeoTracker service
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                ){//Can add more as per requirement
+
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+        }
+        else {
+            startGeoTrackerService_();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 123:
+                if (grantResults.length > 0  && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    startGeoTrackerService_();
+                } else {
+                    // Close your app
+                    closeNow();
+                }
+                break;
+        }
+    }
+
+    private void closeNow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            finishAffinity();
+        } else {
+            finish();
+        }
     }
 
     @Override
@@ -119,7 +162,10 @@ public class MainActivity extends FragmentActivity {
         getMapFragment().updateMapUI();
     }
 
-    void startGeoTrackerService() {
+    /*
+    this one is to be called only after permissions checked
+     */
+    void startGeoTrackerService_() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if(prefs.getBoolean(Constants.ENABLE_BACKGROUND_SERVICE_CHECKBOX, true)) {
             mGeoServiceResults = new GeoServiceResultReceiver(this, null);
